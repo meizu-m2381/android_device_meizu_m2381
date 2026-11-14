@@ -1,6 +1,6 @@
 # Copyright (C) 2024 The LineageOS Project
 # SPDX-License-Identifier: Apache-2.0
-# Applied after the ROM common product, preserving the original inheritance order.
+# Include directly after ROM inheritance so local identity overrides defaults.
 
 PRODUCT_COMPRESSED_APEX := false
 PRODUCT_DEVICE := m2381

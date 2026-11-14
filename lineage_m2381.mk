@@ -4,5 +4,6 @@
 
 $(call inherit-product, device/meizu/m2381/m2381-common.mk)
 $(call inherit-product, vendor/lineage/config/common_full_phone.mk)
-$(call inherit-product, device/meizu/m2381/m2381-identity.mk)
+# Keep the device identity local to this product after all ROM defaults.
+include device/meizu/m2381/m2381-identity.mk
 PRODUCT_NAME := lineage_m2381
