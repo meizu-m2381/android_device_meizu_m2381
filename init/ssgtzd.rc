@@ -1,0 +1,21 @@
+# Copyright (c) 2019 Qualcomm Technologies, Inc.
+# All Rights Reserved.
+# Confidential and Proprietary - Qualcomm Technologies, Inc.
+
+on post-fs-data
+    mkdir /data/vendor/qwes 0755 system system
+
+on early-boot
+    start vendor.ssgtzd
+
+service vendor.ssgtzd /vendor/bin/ssgtzd
+    class late_start
+    user system
+    group system oem_2912
+    # This API 33 daemon also loads VNDK33 libcurl/libssl. Keep its crypto
+    # dependencies in the same ABI; current vendor libcrypto hides CBS_init.
+    # Scope the search path to this daemon, leaving source-built services alone.
+    setenv LD_LIBRARY_PATH /apex/com.android.vndk.v33/lib64
+    disabled
+    socket ssgtzd stream 0660 system oem_2912
+    socket ssgtzd_opener stream 0660 system system
