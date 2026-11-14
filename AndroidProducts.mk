@@ -9,12 +9,14 @@ PRODUCT_MAKEFILES := \
 ifneq ($(wildcard vendor/custom/config/common_full_phone.mk),)
 PRODUCT_MAKEFILES += $(LOCAL_DIR)/custom_m2381.mk
 
-# PixelOS 的 breakfast 会拼成 custom_m2381-<aosp_target_release>-<variant>，
-# 当前 aosp_target_release = bp4a（见 vendor/lineage/vars/aosp_target_release）
+# Use the target tree's release token (Android 16 bp4a / Android 17 cp2a).
+M2381_TARGET_RELEASE := $(strip $(shell sed -n 's/^aosp_target_release=//p' vendor/lineage/vars/aosp_target_release))
+ifneq ($(M2381_TARGET_RELEASE),)
 COMMON_LUNCH_CHOICES := \
-    custom_m2381-bp4a-user \
-    custom_m2381-bp4a-userdebug \
-    custom_m2381-bp4a-eng
+    custom_m2381-$(M2381_TARGET_RELEASE)-user \
+    custom_m2381-$(M2381_TARGET_RELEASE)-userdebug \
+    custom_m2381-$(M2381_TARGET_RELEASE)-eng
+endif
 endif
 
 # Lineage-based ROMs should use their branch's own release token in lunch:
