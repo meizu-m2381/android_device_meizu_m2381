@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    MEIZU 20 (m2381) 专有 HAL 的 framework compatibility matrix 补充。
+
+    原厂 vendor 分区（Android 13 / FCM 7）里有 12 个厂商私有 HAL，
+    它们在 vendor manifest 中声明，但 AOSP Android 16 的 framework
+    compatibility matrix 里没有对应条目，导致 check_vintf 报：
+
+        ERROR: The following instances are in the device manifest but not
+               specified in framework compatibility matrix
+
+    按 AOSP 的提示（"For device-specific HALs, add to
+    DEVICE_FRAMEWORK_COMPATIBILITY_MATRIX_FILE"），在此统一登记。
+    全部标记 optional="true"：设备可以没有它们，但有则允许。
+-->
+<compatibility-matrix version="7.0" type="framework">
+
+    <!-- ================= HIDL ================= -->
+    <hal format="hidl" optional="true">
+        <name>vendor.meizu.hardware.fbase_defrag</name>
+        <transport>hwbinder</transport>
+        <version>1.0</version>
+        <interface>
+            <name>IFbaseDefrag</name>
+            <instance>default</instance>
+        </interface>
+    </hal>
+
+    <hal format="hidl" optional="true">
+        <name>vendor.meizu.hardware.fido</name>
+        <transport>hwbinder</transport>
+        <version>2.0</version>
+        <interface>
+            <name>IFIDODaemon</name>
+            <instance>default</instance>
+        </interface>
+    </hal>
+
+    <hal format="hidl" optional="true">
+        <name>vendor.meizu.hardware.ifaa</name>
+        <transport>hwbinder</transport>
+        <version>1.0</version>
+        <interface>
+            <name>IIFAADaemon</name>
+            <instance>default</instance>
+        </interface>
+    </hal>
+
+    <hal format="hidl" optional="true">
+        <name>vendor.meizu.hardware.meizu_charging</name>
+        <transport>hwbinder</transport>
+        <version>1.0</version>
+        <interface>
+            <name>IMeizuCharging</name>
+            <instance>default</instance>
+        </interface>
+    </hal>
+
+    <hal format="hidl" optional="true">
+        <name>vendor.meizu.hardware.meizu_kelog</name>
+        <transport>hwbinder</transport>
+        <version>1.0</version>
+        <interface>
+            <name>IMeizuKelog</name>
+            <instance>default</instance>
+        </interface>
+    </hal>
+
+    <hal format="hidl" optional="true">
+        <name>vendor.meizu.hardware.tiktap_hidl</name>
+        <transport>hwbinder</transport>
+        <version>1.0</version>
+        <interface>
+            <name>ITiktap</name>
+            <instance>default</instance>
+        </interface>
+    </hal>
+
+    <hal format="hidl" optional="true">
+        <name>vendor.meizu.sensor_aux</name>
+        <transport>hwbinder</transport>
+        <version>1.0</version>
+        <interface>
+            <name>ISensorAux</name>
+            <instance>default</instance>
+        </interface>
+    </hal>
+
+    <hal format="hidl" optional="true">
+        <name>vendor.rongcard.hardware.eid_rk</name>
+        <transport>hwbinder</transport>
+        <version>1.0</version>
+        <interface>
+            <name>IEidDevice</name>
+            <instance>default</instance>
+        </interface>
+    </hal>
+
+    <hal format="hidl" optional="true">
+        <name>vendor.xingji.hardware.biometrics.face</name>
+        <transport>hwbinder</transport>
+        <version>1.0</version>
+        <interface>
+            <name>IBiometricsFace</name>
+            <instance>default</instance>
+        </interface>
+    </hal>
+
+    <hal format="hidl" optional="true">
+        <name>vendor.xingji.hardware.qsee.store</name>
+        <transport>hwbinder</transport>
+        <version>1.0</version>
+        <interface>
+            <name>IQseeStore</name>
+            <instance>default</instance>
+        </interface>
+    </hal>
+
+    <!-- ================= AIDL ================= -->
+    <hal format="aidl" optional="true">
+        <name>vendor.meizu.hardware.qsh_geofence</name>
+        <version>1</version>
+        <interface>
+            <name>IQshGeofence</name>
+            <instance>default</instance>
+        </interface>
+    </hal>
+
+    <hal format="aidl" optional="true">
+        <name>vendor.xj.hardware.wifi.supplicant</name>
+        <version>1</version>
+        <interface>
+            <name>ISupplicantXj</name>
+            <instance>default</instance>
+        </interface>
+    </hal>
+
+</compatibility-matrix>

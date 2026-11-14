@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <bool name="config_enableAuxCameras">true</bool>
+    <!-- Camera 2 is the depth sensor; camera 4 is the logical combination.
+         Offer the physical main camera (0) and ultrawide (3) as lenses. -->
+    <string-array name="config_ignoredAuxCameraIds">
+        <item>2</item>
+        <item>4</item>
+    </string-array>
+</resources>

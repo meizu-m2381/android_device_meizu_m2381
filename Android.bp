@@ -1,0 +1,262 @@
+//
+// Copyright (C) 2024 The LineageOS Project
+//
+// SPDX-License-Identifier: Apache-2.0
+//
+
+soong_namespace {
+}
+
+// EGL's explicit egl/ path and DT_NEEDED must resolve to the same inode.
+install_symlink {
+    name: "m2381_adreno_egl_alias_32",
+    vendor: true,
+    installed_location: "lib/libEGL_adreno.so",
+    symlink_target: "egl/libEGL_adreno.so",
+}
+
+install_symlink {
+    name: "m2381_adreno_egl_alias_64",
+    vendor: true,
+    installed_location: "lib64/libEGL_adreno.so",
+    symlink_target: "egl/libEGL_adreno.so",
+}
+
+install_symlink {
+    name: "m2381_adreno_gles_alias_32",
+    vendor: true,
+    installed_location: "lib/libGLESv2_adreno.so",
+    symlink_target: "egl/libGLESv2_adreno.so",
+}
+
+install_symlink {
+    name: "m2381_adreno_gles_alias_64",
+    vendor: true,
+    installed_location: "lib64/libGLESv2_adreno.so",
+    symlink_target: "egl/libGLESv2_adreno.so",
+}
+
+install_symlink {
+    name: "firmware_wlanmdsp.otaupdate_symlink",
+    vendor: true,
+    installed_location: "firmware/wlanmdsp.otaupdate",
+    symlink_target: "/data/vendor/firmware/wlanmdsp.mbn",
+}
+
+install_symlink {
+    name: "firmware_wlan_mac.bin_symlink",
+    vendor: true,
+    installed_location: "firmware/wlan/qca_cld/kiwi_v2/wlan_mac.bin",
+    symlink_target: "/mnt/vendor/persist/kiwi_v2/wlan_mac.bin",
+}
+
+install_symlink {
+    name: "firmware_WCNSS_qcom_cfg.ini_symlink",
+    vendor: true,
+    installed_location: "firmware/wlan/qca_cld/kiwi_v2/WCNSS_qcom_cfg.ini",
+    symlink_target: "/vendor/etc/wifi/kiwi_v2/WCNSS_qcom_cfg.ini",
+}
+
+install_symlink {
+    name: "rfs_msm_mpss_readonly_mbnconfig_symlink",
+    vendor: true,
+    installed_location: "rfs/msm/mpss/readonly/mbnconfig",
+    symlink_target: "/data/vendor/mbnconfig",
+}
+
+prebuilt_hidl_interfaces {
+    name: "hidl_vendor_qti_hardware_wifi_wifilearner_interface",
+    interfaces: [
+        "vendor.qti.hardware.wifi.wifilearner@1.0::IWifiStats",
+    ],
+}
+// 跨分区符号链接（由 blobs 的绝对软链转换而来）
+
+install_symlink {
+    name: "mz_symlink_01",
+    vendor: true,
+    installed_location: "app/CneApp/lib/arm64/libvndfwk_detect_jni.qti_vendor.so",
+    symlink_target: "/vendor/lib64/libvndfwk_detect_jni.qti_vendor.so",
+}
+
+install_symlink {
+    name: "mz_symlink_02",
+    vendor: true,
+    installed_location: "lib/modules",
+    symlink_target: "/vendor_dlkm/lib/modules",
+}
+
+install_symlink {
+    name: "mz_symlink_03",
+    vendor: true,
+    installed_location: "odm",
+    symlink_target: "/odm",
+}
+
+install_symlink {
+    name: "mz_symlink_04",
+    vendor: true,
+    installed_location: "rfs/apq/gnss/readonly/firmware",
+    symlink_target: "/vendor/firmware_mnt",
+}
+
+install_symlink {
+    name: "mz_symlink_05",
+    vendor: true,
+    installed_location: "rfs/apq/gnss/readonly/vendor/firmware",
+    symlink_target: "/vendor/firmware",
+}
+
+install_symlink {
+    name: "mz_symlink_06",
+    vendor: true,
+    installed_location: "rfs/mdm/adsp/readonly/firmware",
+    symlink_target: "/vendor/firmware_mnt",
+}
+
+install_symlink {
+    name: "mz_symlink_07",
+    vendor: true,
+    installed_location: "rfs/mdm/adsp/readonly/vendor/firmware",
+    symlink_target: "/vendor/firmware",
+}
+
+install_symlink {
+    name: "mz_symlink_08",
+    vendor: true,
+    installed_location: "rfs/mdm/cdsp/readonly/firmware",
+    symlink_target: "/vendor/firmware_mnt",
+}
+
+install_symlink {
+    name: "mz_symlink_09",
+    vendor: true,
+    installed_location: "rfs/mdm/cdsp/readonly/vendor/firmware",
+    symlink_target: "/vendor/firmware",
+}
+
+install_symlink {
+    name: "mz_symlink_10",
+    vendor: true,
+    installed_location: "rfs/mdm/mpss/readonly/firmware",
+    symlink_target: "/vendor/firmware_mnt",
+}
+
+install_symlink {
+    name: "mz_symlink_11",
+    vendor: true,
+    installed_location: "rfs/mdm/mpss/readonly/vendor/firmware",
+    symlink_target: "/vendor/firmware",
+}
+
+install_symlink {
+    name: "mz_symlink_12",
+    vendor: true,
+    installed_location: "rfs/mdm/slpi/readonly/firmware",
+    symlink_target: "/vendor/firmware_mnt",
+}
+
+install_symlink {
+    name: "mz_symlink_13",
+    vendor: true,
+    installed_location: "rfs/mdm/slpi/readonly/vendor/firmware",
+    symlink_target: "/vendor/firmware",
+}
+
+install_symlink {
+    name: "mz_symlink_14",
+    vendor: true,
+    installed_location: "rfs/mdm/tn/readonly/firmware",
+    symlink_target: "/vendor/firmware_mnt",
+}
+
+install_symlink {
+    name: "mz_symlink_15",
+    vendor: true,
+    installed_location: "rfs/mdm/tn/readonly/vendor/firmware",
+    symlink_target: "/vendor/firmware",
+}
+
+install_symlink {
+    name: "mz_symlink_16",
+    vendor: true,
+    installed_location: "rfs/mdm/wpss/readonly/firmware",
+    symlink_target: "/vendor/firmware_mnt",
+}
+
+install_symlink {
+    name: "mz_symlink_17",
+    vendor: true,
+    installed_location: "rfs/mdm/wpss/readonly/vendor/firmware",
+    symlink_target: "/vendor/firmware",
+}
+
+install_symlink {
+    name: "mz_symlink_18",
+    vendor: true,
+    installed_location: "rfs/msm/adsp/readonly/firmware",
+    symlink_target: "/vendor/firmware_mnt",
+}
+
+install_symlink {
+    name: "mz_symlink_19",
+    vendor: true,
+    installed_location: "rfs/msm/adsp/readonly/vendor/firmware",
+    symlink_target: "/vendor/firmware",
+}
+
+install_symlink {
+    name: "mz_symlink_20",
+    vendor: true,
+    installed_location: "rfs/msm/cdsp/readonly/firmware",
+    symlink_target: "/vendor/firmware_mnt",
+}
+
+install_symlink {
+    name: "mz_symlink_21",
+    vendor: true,
+    installed_location: "rfs/msm/cdsp/readonly/vendor/firmware",
+    symlink_target: "/vendor/firmware",
+}
+
+install_symlink {
+    name: "mz_symlink_22",
+    vendor: true,
+    installed_location: "rfs/msm/mpss/readonly/firmware",
+    symlink_target: "/vendor/firmware_mnt",
+}
+
+install_symlink {
+    name: "mz_symlink_23",
+    vendor: true,
+    installed_location: "rfs/msm/mpss/readonly/vendor/firmware",
+    symlink_target: "/vendor/firmware",
+}
+
+install_symlink {
+    name: "mz_symlink_24",
+    vendor: true,
+    installed_location: "rfs/msm/slpi/readonly/firmware",
+    symlink_target: "/vendor/firmware_mnt",
+}
+
+install_symlink {
+    name: "mz_symlink_25",
+    vendor: true,
+    installed_location: "rfs/msm/slpi/readonly/vendor/firmware",
+    symlink_target: "/vendor/firmware",
+}
+
+install_symlink {
+    name: "mz_symlink_26",
+    vendor: true,
+    installed_location: "rfs/msm/wpss/readonly/firmware",
+    symlink_target: "/vendor/firmware_mnt",
+}
+
+install_symlink {
+    name: "mz_symlink_27",
+    vendor: true,
+    installed_location: "rfs/msm/wpss/readonly/vendor/firmware",
+    symlink_target: "/vendor/firmware",
+}

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+<resources>
+    <!-- Preserve the device capabilities and scan policy from the stock
+         WifiResCommon_Vendor_Mz overlay; use AOSP's five signal levels. -->
+    <integer-array name="config_wifiRssiLevelThresholds" translatable="false">
+        <item>-88</item>
+        <item>-77</item>
+        <item>-66</item>
+        <item>-55</item>
+    </integer-array>
+    <string-array name="config_wifiBackgroundScanThrottleExceptionList" translatable="false">
+        <item>com.meizu.flyme.find</item>
+        <item>com.meizu.flyme.service.find</item>
+    </string-array>
+    <string-array name="config_wifiForegroundScanThrottleExceptionList" translatable="false">
+        <item>com.meizu.flyme.find</item>
+        <item>com.meizu.flyme.service.find</item>
+        <item>com.meizu.location</item>
+    </string-array>
+    <string-array name="config_wifiCharsetsForSsidTranslation" translatable="false">
+        <item>all,EUC-JP</item>
+        <item>zh,GBK</item>
+        <item>ko,EUC-KR</item>
+    </string-array>
+    <integer-array name="config_wifiConnectedScanIntervalScheduleSec" translatable="false">
+        <item>40</item><item>60</item><item>80</item><item>160</item>
+    </integer-array>
+    <integer-array name="config_wifiDisconnectedScanIntervalScheduleSec" translatable="false">
+        <item>20</item><item>20</item><item>20</item><item>20</item>
+        <item>20</item><item>20</item><item>30</item>
+    </integer-array>
+    <integer-array name="config_wifiDisconnectedScanType" translatable="false">
+        <item>2</item><item>2</item><item>0</item><item>0</item>
+        <item>0</item><item>2</item><item>0</item>
+    </integer-array>
+    <bool name="config_vendor_softap_ocv_supported">false</bool>
+    <bool name="config_wifiMultiStaLocalOnlyConcurrencyEnabled">false</bool>
+    <bool name="config_wifiMultiStaNetworkSwitchingMakeBeforeBreakEnabled">false</bool>
+    <bool name="config_wifiSoftapIeee80211axSupported">true</bool>
+    <bool name="config_wifi_ap_mac_randomization_supported">false</bool>
+    <bool name="config_wifi_softap_sae_supported">true</bool>
+    <integer name="config_wifiDisableReasonAssociationRejectionThreshold">8</integer>
+    <integer name="config_wifiDisableReasonAuthenticationFailureThreshold">8</integer>
+    <integer name="config_wifiDisableReasonByWrongPasswordThreshold">0</integer>
+    <integer name="config_wifiFrameworkUnmeteredNetworkBonus">20</integer>
+    <integer name="config_wifiHardwareSoftapMaxClientCount">5</integer>
+</resources>

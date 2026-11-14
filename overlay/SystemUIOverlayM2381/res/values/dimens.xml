@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+     Copyright (C) 2026 The LineageOS Project
+     SPDX-License-Identifier: Apache-2.0
+-->
+<resources>
+    <item name="pixel_pitch" type="dimen" format="float">50</item>
+    <dimen name="status_bar_icons_padding_end">0dp</dimen>
+    <dimen name="status_bar_icons_padding_start">0dp</dimen>
+    <!-- AOSP already reserves 20dp at the end for the privacy indicator.
+         Do not add Flyme's end padding a second time. -->
+    <dimen name="status_bar_padding_end">0dp</dimen>
+    <dimen name="status_bar_padding_start">20dp</dimen>
+    <dimen name="status_bar_padding_top">10px</dimen>
+</resources>

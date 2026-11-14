@@ -1,0 +1,15 @@
+// SPDX-License-Identifier: Apache-2.0
+cc_binary {
+    name: "android.hardware.vibrator-service.meizu",
+    vendor: true,
+    relative_install_path: "hw",
+    srcs: ["service.cpp"],
+    init_rc: ["vibrator-meizu.rc"],
+    vintf_fragments: ["vibrator-meizu.xml"],
+    shared_libs: [
+        "libbase",
+        "libbinder_ndk",
+        "android.hardware.vibrator-V2-ndk",
+    ],
+    cflags: ["-Wall", "-Wextra", "-Werror"],
+}
