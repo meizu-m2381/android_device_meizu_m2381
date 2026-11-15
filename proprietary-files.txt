@@ -1587,10 +1587,6 @@ odm/etc/fs_config_dirs
 odm/etc/fs_config_files
 odm/etc/group
 odm/etc/passwd
-odm/etc/selinux/precompiled_sepolicy
-odm/etc/selinux/precompiled_sepolicy.plat_sepolicy_and_mapping.sha256
-odm/etc/selinux/precompiled_sepolicy.product_sepolicy_and_mapping.sha256
-odm/etc/selinux/precompiled_sepolicy.system_ext_sepolicy_and_mapping.sha256
 system_dlkm/etc/NOTICE.xml.gz
 system_dlkm/etc/build.prop
 system_dlkm/etc/fs_config_dirs

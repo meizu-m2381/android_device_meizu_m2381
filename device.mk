@@ -443,6 +443,7 @@ PRODUCT_VENDOR_PROPERTIES += \
 PRODUCT_PACKAGES += \
     android.hardware.vibrator-service.meizu \
     m2381_vendor_sepolicy \
+    m2381_precompiled_sepolicy \
     m2381_vendor_file_contexts
 
 PRODUCT_COPY_FILES += \
