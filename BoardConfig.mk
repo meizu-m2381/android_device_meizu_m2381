@@ -71,6 +71,10 @@ TARGET_USES_QCOM_MM_AUDIO := false
 # local_manifests 已用 remove-project 移除该源码项目，命名空间不能再指向它。
 USE_DEVICE_SPECIFIC_DATA_IPA_CFG_MGR := true
 
+# Stock display HALs replace CAF SM8550; resolve the source power HAL's
+# displayconfig dependency through the upstream shared display namespace.
+QCOM_SOONG_NAMESPACE := vendor/qcom/opensource/display
+
 # Bootloader
 TARGET_NO_BOOTLOADER := true
 
