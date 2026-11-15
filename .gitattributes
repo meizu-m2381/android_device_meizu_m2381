@@ -1,0 +1,52 @@
+* text=auto eol=lf
+*.sh text eol=lf
+*.py text eol=lf
+*.S text eol=lf
+*.rc text eol=lf
+*.mk text eol=lf
+*.bp text eol=lf
+*.xml text eol=lf
+*.patch text eol=lf
+# Unified-diff context needs its leading space even on empty lines.
+*.patch -whitespace
+
+# Fixed proprietary inputs: retrieve payloads with git lfs pull.
+/modules_prebuilt/** filter=lfs diff=lfs merge=lfs -text
+
+/init/init.kernel.post_boot-kalama.sh -text -whitespace
+/init/init.kernel.post_boot.sh -text -whitespace
+/init/init.qti.kernel.rc -text -whitespace
+/init/init.qti.kernel.sh -text -whitespace
+/init/init.qti.write.sh -text -whitespace
+/init/ssgtzd.rc -text -whitespace
+/init/system_dlkm_modprobe.sh -text -whitespace
+/init/vendor_modprobe.sh -text -whitespace
+/configs/vintf/manifest/android.hardware.radio.config.xml -text -whitespace
+/configs/vintf/manifest/android.hardware.radio.data.xml -text -whitespace
+/configs/vintf/manifest/android.hardware.radio.messaging.xml -text -whitespace
+/configs/vintf/manifest/android.hardware.radio.modem.xml -text -whitespace
+/configs/vintf/manifest/android.hardware.radio.network.xml -text -whitespace
+/configs/vintf/manifest/android.hardware.radio.sim.xml -text -whitespace
+/configs/vintf/manifest/android.hardware.radio.voice.xml -text -whitespace
+/configs/vintf/manifest/android.hardware.security.keymint-service-qti.xml -text -whitespace
+/configs/vintf/manifest/bluetooth_audio.xml -text -whitespace
+/configs/vintf/manifest/bttpi-saidl.xml -text -whitespace
+/configs/vintf/manifest/dataconnection-saidl.xml -text -whitespace
+/configs/vintf/manifest/deviceinfo-saidl.xml -text -whitespace
+/configs/vintf/manifest/imsdcservice-saidl.xml -text -whitespace
+/configs/vintf/manifest/qcrilhook-saidl.xml -text -whitespace
+/configs/vintf/manifest/qtiradio-saidl.xml -text -whitespace
+/configs/vintf/manifest/vendor.meizu.hardware.qsh_geofence-service.xml -text -whitespace
+/configs/vintf/manifest/vendor.qti.camera.provider.xml -text -whitespace
+/configs/vintf/manifest/vendor.qti.diag.hal.service.xml -text -whitespace
+/configs/vintf/manifest/vendor.qti.gnss-service.xml -text -whitespace
+/configs/vintf/manifest/vendor.qti.hardware.limits-service.xml -text -whitespace
+/configs/vintf/manifest/vendor.qti.hardware.power.powermodule.xml -text -whitespace
+/configs/vintf/manifest/vendor.qti.hardware.qconfig@1.0-service.xml -text -whitespace
+/configs/vintf/manifest/vendor.qti.hardware.qxr-service.xml -text -whitespace
+/configs/vintf/manifest/vendor.qti.hardware.radio.am.xml -text -whitespace
+/configs/vintf/manifest/vendor.qti.hardware.radio.ims.xml -text -whitespace
+/configs/vintf/manifest/vendor.qti.hardware.radio.qtiradioconfig.xml -text -whitespace
+/configs/vintf/manifest/vendor.qti.hardware.servicetracker@1.2-service.xml -text -whitespace
+/configs/vintf/manifest/vendor.qti.hardware.vpp@2.0-service.xml -text -whitespace
+/configs/vintf/manifest/vendor.qti.memory.pasrmanager@1.0-service.xml -text -whitespace
