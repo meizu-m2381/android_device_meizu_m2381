@@ -66,6 +66,11 @@ BOARD_SUPPORTS_OPENSOURCE_STHAL := false
 # （linux/msm_audio.h），无法在本环境编译。
 TARGET_USES_QCOM_MM_AUDIO := false
 
+# ipacm 由 vendor blobs 提供；置 true 让 BoardConfigQcom.mk 不再把
+# hardware/qcom-caf/sm8550/data-ipa-cfg-mgr 加进 PRODUCT_SOONG_NAMESPACES。
+# local_manifests 已用 remove-project 移除该源码项目，命名空间不能再指向它。
+USE_DEVICE_SPECIFIC_DATA_IPA_CFG_MGR := true
+
 # Bootloader
 TARGET_NO_BOOTLOADER := true
 
