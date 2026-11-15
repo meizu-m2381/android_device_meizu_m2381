@@ -1,0 +1,25 @@
+// SPDX-License-Identifier: Apache-2.0
+cc_binary {
+    name: "android.hardware.health-service.m2381",
+    // Separate output name avoids colliding with QTI's unselected source HAL.
+    relative_install_path: "hw",
+    vendor: true,
+    defaults: ["libhealth_aidl_impl_user"],
+    static_libs: ["libhealth_aidl_impl"],
+    include_dirs: [
+        "system/core/healthd",
+        "system/core/healthd/include",
+        "system/core/healthd/include_charger",
+    ],
+    srcs: ["main.cpp"],
+    init_rc: ["android.hardware.health-service.qti.rc"],
+    vintf_fragments: ["android.hardware.health-service.qti.xml"],
+    overrides: ["charger"],
+    cflags: ["-Wall", "-Werror"],
+}
+
+cc_test_host {
+    name: "m2381_health_policy_test",
+    srcs: ["tests/ChargingPolicyTest.cpp"],
+    cflags: ["-Wall", "-Werror"],
+}

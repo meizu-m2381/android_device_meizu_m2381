@@ -198,7 +198,7 @@ PRODUCT_COPY_FILES += \
 
 # Health
 PRODUCT_PACKAGES += \
-    android.hardware.health-service.qti \
+    android.hardware.health-service.m2381 \
     android.hardware.health-service.qti_recovery
 
 # Init

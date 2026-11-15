@@ -1694,7 +1694,6 @@ vendor/bin/hw/android.hardware.dumpstate-service.qti
 vendor/bin/hw/android.hardware.gatekeeper@1.0-service-qti
 vendor/bin/hw/android.hardware.gatekeeper@1.0-service-spu-qti
 vendor/bin/hw/android.hardware.gnss-aidl-service-qti
-vendor/bin/hw/android.hardware.health-service.qti
 vendor/bin/hw/android.hardware.keymaster@4.0-service-qti
 vendor/bin/hw/android.hardware.keymaster@4.0-strongbox-service-qti
 vendor/bin/hw/android.hardware.media.omx@1.0-service
@@ -2196,7 +2195,6 @@ vendor/etc/init/android.hardware.drm-service.widevine.rc
 vendor/etc/init/android.hardware.drm@1.1-service.wfdhdcp.rc
 vendor/etc/init/android.hardware.gatekeeper@1.0-service-qti.rc
 vendor/etc/init/android.hardware.gnss-aidl-service-qti.rc
-vendor/etc/init/android.hardware.health-service.qti.rc
 vendor/etc/init/android.hardware.identity-service-qti.rc
 vendor/etc/init/android.hardware.media.omx@1.0-service.rc
 vendor/etc/init/android.hardware.power-service.rc
@@ -2620,7 +2618,6 @@ vendor/etc/vintf/manifest/android.hardware.drm-service.clearkey.xml
 vendor/etc/vintf/manifest/android.hardware.drm-service.xml
 vendor/etc/vintf/manifest/android.hardware.gnss-aidl-service-qti.xml
 vendor/etc/vintf/manifest/android.hardware.graphics.mapper-impl-qti-display.xml
-vendor/etc/vintf/manifest/android.hardware.health-service.qti.xml
 vendor/etc/vintf/manifest/android.hardware.radio.config.xml
 vendor/etc/vintf/manifest/android.hardware.radio.data.xml
 vendor/etc/vintf/manifest/android.hardware.radio.messaging.xml
