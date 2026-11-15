@@ -12,8 +12,8 @@ cc_binary {
         "system/core/healthd/include_charger",
     ],
     srcs: ["main.cpp"],
-    init_rc: ["android.hardware.health-service.qti.rc"],
-    vintf_fragments: ["android.hardware.health-service.qti.xml"],
+    init_rc: ["android.hardware.health-service.m2381.rc"],
+    vintf_fragments: ["android.hardware.health-service.m2381.xml"],
     overrides: ["charger"],
     cflags: ["-Wall", "-Werror"],
 }
