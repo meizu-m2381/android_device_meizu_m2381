@@ -5,7 +5,10 @@
     421619,
     465067,
     465271,
-    472159
+    472159,
+    394610,
+    394611,
+    410069
   ],
   "files": [
     {
@@ -52,10 +55,16 @@
     {
       "path": "vendor/lib/libcodec2_hidl@1.0.so",
       "sha256": "731f9cd68f140c29b49969a7fe88beef5fa8dc7ced279af92b3bb49b611850cb",
-      "fixed_sha256": "d572c94daab097958e0e626c62e593adc8bc6275b812fa0fc74f526cf811c1fc",
+      "fixed_sha256": "5aa00243df8432cfa06d9360b0b35da5043cf9cc95ca4c9d733781fcc2df3266",
       "symbols": [
         "_ZN7android4base15WriteStringToFdERKNSt3__112basic_stringIcNS1_11char_traitsIcEENS1_9allocatorIcEEEENS0_11borrowed_fdE"
-      ]
+      ],
+      "previous_fixed_sha256": [
+        "d572c94daab097958e0e626c62e593adc8bc6275b812fa0fc74f526cf811c1fc"
+      ],
+      "replace_needed": {
+        "libstagefright_bufferqueue_helper.so": "libstagefright_bufferqueue_helper-v33.so"
+      }
     },
     {
       "path": "vendor/lib/nfc_nci.nqx.default.hw.so",
@@ -112,6 +121,17 @@
       "fixed_sha256": "5b9909c3ba7525041df68bccc1ad63344c2bf6338a0d527600ddc4b92046269c",
       "symbols": [
         "_ZN7android4base4TrimERKNSt3__112basic_stringIcNS1_11char_traitsIcEENS1_9allocatorIcEEEE"
+      ]
+    },
+    {
+      "path": "vendor/lib/libcodec2_vndk.so",
+      "sha256": "81c6288b9ff5acc4d5c6a0b204617f59f89e90a9c2a8a0091ae0ce54c2dd659e",
+      "fixed_sha256": "85c5d90fa7c97f9bb5081b51e762b2264e7231cce45647addc8a30266368058a",
+      "add_needed": [
+        "libui_shim.so"
+      ],
+      "symbols": [
+        "_ZN7android19GraphicBufferMapper4lockEPK13native_handlejRKNS_4RectEPPvPiS9_"
       ]
     }
   ]

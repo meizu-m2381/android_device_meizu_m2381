@@ -1,0 +1,7 @@
+{
+  "source": "prebuilts/vndk/v33/arm64/arch-arm-armv8-a/shared/vndk-core/libstagefright_bufferqueue_helper.so",
+  "sha256": "8856f89c5d6a7dbc8bd0674955f5cc56b0a31413b338a7afed599bf0267a3117",
+  "soname": "libstagefright_bufferqueue_helper-v33.so",
+  "add_needed": "libbase_shim.so",
+  "fixed_sha256": "9e7af609307bd87712c2a700be2d4116c43d560b040acd22f23ed65ce08ba17c"
+}

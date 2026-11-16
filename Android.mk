@@ -8,6 +8,25 @@ LOCAL_PATH := $(call my-dir)
 
 ifneq ($(filter m2381,$(TARGET_DEVICE)),)
 
+# Derive a separately named API 33 helper from the unmodified VNDK snapshot.
+# The generator checks input/output hashes and preserves the upstream notice.
+include $(CLEAR_VARS)
+LOCAL_MODULE := m2381_bufferqueue_helper_v33
+LOCAL_MODULE_CLASS := ETC
+LOCAL_MODULE_PATH := $(TARGET_OUT_VENDOR)/lib
+LOCAL_MODULE_STEM := libstagefright_bufferqueue_helper-v33.so
+LOCAL_VENDOR_MODULE := true
+LOCAL_CHECK_ELF_FILES := false
+LOCAL_LICENSE_KINDS := SPDX-license-identifier-Apache-2.0
+LOCAL_LICENSE_CONDITIONS := notice
+LOCAL_NOTICE_FILE := frameworks/av/media/libstagefright/NOTICE frameworks/native/libs/ui/NOTICE
+m2381_media_helper := $(call intermediates-dir-for,ETC,$(LOCAL_MODULE))/generated/$(LOCAL_MODULE_STEM)
+$(m2381_media_helper): PRIVATE_COMPAT_TOOL := $(LOCAL_PATH)/tools/prepare_media_helper.py
+$(m2381_media_helper): $(LOCAL_PATH)/tools/prepare_media_helper.py $(LOCAL_PATH)/tools/configure_blob_compat.py $(LOCAL_PATH)/configs/compat/media-helper.json prebuilts/vndk/v33/arm64/arch-arm-armv8-a/shared/vndk-core/libstagefright_bufferqueue_helper.so prebuilts/extract-tools/linux-x86/bin/patchelf-0_17_2
+	python3 $(PRIVATE_COMPAT_TOOL) --aosp . --output $@
+LOCAL_PREBUILT_MODULE_FILE := $(m2381_media_helper)
+include $(BUILD_PREBUILT)
+
 # 本机复用 API 33 的原厂 vendor CIL；它仍拥有 /class/udc 和
 # /power/mem_sleep 的 genfscon。新版 202504 标签会与这些规则冲突。
 # 覆盖安装版本文件，保持 libgenfslabelsversion 对旧 vendor 的 202404 行为。

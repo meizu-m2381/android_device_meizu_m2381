@@ -13,6 +13,13 @@ $(call inherit-product, vendor/meizu/m2381/m2381-vendor.mk)
 # Legacy API 33 vendor binaries use LineageOS's upstream compatibility shim.
 PRODUCT_PACKAGES += libbase_shim:32 libbase_shim:64
 
+# qguard must use the current vendor ABI, not VNDK33 libprocessgroup with
+# a libbase dependency shared back into the current vendor namespace.
+PRODUCT_PACKAGES += libprocessgroup.vendor:64
+
+# Keep the legacy 32-bit codec stack separate from the current OMX helper.
+PRODUCT_PACKAGES += libui_shim.vendor:32 m2381_bufferqueue_helper_v33
+
 # Source-built vendor libbinder needs this current system LLNDK library.
 # Keep the requirement in this product instead of editing the VNDK33 snapshot.
 PRODUCT_VENDOR_LINKER_CONFIG_FRAGMENTS += $(LOCAL_PATH)/configs/linker.config.json
