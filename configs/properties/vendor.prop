@@ -300,11 +300,12 @@ sys.usb.mtp.batchcancel=1
 sys.vendor.shutdown.waittime=500
 vendor.dynamic_sensor.setup.timeout.ms=2000
 vendor.hw.fm.init=0
-vendor.meizu.fingerprint.height=208
+# M2381 stock vendor geometry in physical 1080x2400 display pixels.
+vendor.meizu.fingerprint.height=190
 vendor.meizu.fingerprint.in-display=true
-vendor.meizu.fingerprint.width=208
-vendor.meizu.fingerprint.x=632
-vendor.meizu.fingerprint.y=2460
+vendor.meizu.fingerprint.width=190
+vendor.meizu.fingerprint.x=540
+vendor.meizu.fingerprint.y=1796
 vendor.meizu.ifaa.seccam.version=300
 vendor.meizu.ifaa.version=4
 vendor.mm.enable.qcom_parser=16777215

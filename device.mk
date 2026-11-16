@@ -160,9 +160,9 @@ PRODUCT_PACKAGES += \
     fastbootd
 
 # Fingerprint
-# 本机指纹由魅族自研 vendor.meizu.hardware.fido@2.0 提供，实现的是 AIDL 接口
-# android.hardware.biometrics.fingerprint.IFingerprint（GSI 上实测已成功注册到
-# service list）。21 Note 用的是 JIIOV 的 HIDL 服务，本机不适用，故不打包。
+# 本机由 qfp-daemon 提供高通屏下超声波指纹 AIDL IFingerprint/default，
+# vendor.meizu.hardware.fido@2.0 是独立的魅族扩展服务。
+# 21 Note 用的是 JIIOV 的 HIDL 服务，本机不适用，故不打包。
 # 权限文件由 vendor blobs 自带（/vendor/etc/permissions/android.hardware.fingerprint.xml
 # 与 qti_fingerprint_interface.xml），这里不再重复安装。
 
@@ -398,11 +398,11 @@ PRODUCT_COPY_FILES += \
     frameworks/native/data/etc/android.hardware.touchscreen.multitouch.jazzhand.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.touchscreen.multitouch.jazzhand.xml
 
 # Biometrics
-# 魅族 20 与 21 Note 不同：本机没有 UDFPS / JIIOV，指纹走魅族自研
-# vendor.meizu.hardware.fido@2.0-service（在 vendor 分区），人脸走
+# 魅族 20 使用高通 QFS4008 屏下超声波指纹，不使用 21 Note 的 JIIOV。
+# 标准指纹接口由 qfp-daemon 提供，魅族另有 fido 扩展服务；人脸走
 # vendor.xingji.hardware.biometrics.face@1.0-service。两者都由 vendor blobs 提供，
 # 设备树只需保证 SELinux 与 VINTF 允许它们启动。
-# TODO: 实测 fido HAL 是否兼容 AOSP BiometricPrompt，不兼容时需 shim。
+# 录入、解锁与 BiometricPrompt 须分别进行真机验证。
 
 # Ueventd
 PRODUCT_PACKAGES += \
