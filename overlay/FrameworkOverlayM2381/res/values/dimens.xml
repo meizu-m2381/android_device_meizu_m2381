@@ -5,8 +5,9 @@
 -->
 <resources>
     <dimen name="rounded_corner_content_padding">0dp</dimen>
-    <!-- Stock FrameworksResTarget_Vendor overlay overrides framework's 36dp. -->
-    <dimen name="rounded_corner_radius">20dp</dimen>
+    <!-- Calibrated on the physical 1080x2400 panel, including launcher
+         app transitions. Keep physical geometry independent of UI density. -->
+    <dimen name="rounded_corner_radius">94px</dimen>
     <dimen name="rounded_corner_radius_bottom">0dp</dimen>
     <dimen name="rounded_corner_radius_top">0dp</dimen>
     <dimen name="status_bar_height_default">116px</dimen>
