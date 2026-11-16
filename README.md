@@ -47,3 +47,7 @@ Meizu kernel source does not publish, so they are not built from source.
 
 `proprietary-files.txt` lists 5011 vendor files. Binaries are not stored here;
 see `proprietary_vendor_meizu_m2381`.
+
+## 平台隔离
+
+设备产品使用官方 LineageOS libbase_shim（32/64 位）、设备 linker 配置和 TARGET_PREBUILT_KERNEL_HEADERS。HAL 源码只通过 PRODUCT_SOURCE_ROOT_DIRS 在本产品排除，不移除上游项目。固定 blob 修补清单位于 configs/compat/libbase-fixups.json，tools/configure_blob_compat.py 生成独立 vendor/compat 副本，原厂输入保持不变。内核头选择器需要在 lunch 后导出实际 TARGET_PREBUILT_KERNEL_HEADERS；使用 manifest 仓库的新构建入口完成此步骤。

@@ -10,6 +10,28 @@ $(call inherit-product, hardware/qcom-caf/common/common.mk)
 # Get non-open-source specific aspects
 $(call inherit-product, vendor/meizu/m2381/m2381-vendor.mk)
 
+# Legacy API 33 vendor binaries use LineageOS's upstream compatibility shim.
+PRODUCT_PACKAGES += libbase_shim:32 libbase_shim:64
+
+# Source-built vendor libbinder needs this current system LLNDK library.
+# Keep the requirement in this product instead of editing the VNDK33 snapshot.
+PRODUCT_VENDOR_LINKER_CONFIG_FRAGMENTS += $(LOCAL_PATH)/configs/linker.config.json
+
+# Keep stock HAL source projects available for other products. Only this
+# product excludes their Soong definitions; no repo projects are removed.
+PRODUCT_SOURCE_ROOT_DIRS += \
+    -hardware/qcom-caf/sm8550/display \
+    -hardware/qcom-caf/sm8550/audio/agm \
+    -hardware/qcom-caf/sm8550/audio/graphservices \
+    -hardware/qcom-caf/sm8550/audio/pal \
+    -hardware/qcom-caf/sm8550/audio/primary-hal \
+    -vendor/qcom/opensource/audio-hal/st-hal \
+    -vendor/qcom/opensource/audio-hal/st-hal-ar \
+    -vendor/qcom/opensource/audio-hal/st-hal-ar-legacy \
+    -hardware/qcom-caf/sm8550/dataipa \
+    -hardware/qcom-caf/sm8550/data-ipa-cfg-mgr \
+    -vendor/qcom/opensource/core-utils-vendor/fwk-detect
+
 # Enforce generic ramdisk allow list
 $(call inherit-product, $(SRC_TARGET_DIR)/product/generic_ramdisk.mk)
 
@@ -110,7 +132,7 @@ PRODUCT_COPY_FILES += \
 
 # lib_bt_aptx / lib_bt_ble / lib_bt_bundle 由 vendor blobs 提供
 # (vendor/lib{,64}/lib_bt_*.so)，不编译源码版：源码版位于 QTI 音频 PAL
-# 的 plugins/codecs 下，而该源码树依赖魅族未公开的内核头，已整体移出。
+# 的 plugins/codecs 下，而该源码树依赖魅族未公开的内核头，已在本产品排除。
 
 # Boot control
 PRODUCT_PACKAGES += \

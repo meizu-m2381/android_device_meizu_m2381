@@ -59,7 +59,7 @@ AUDIO_FEATURE_ENABLED_GEF_SUPPORT := true
 AUDIO_FEATURE_ENABLED_SVA_MULTI_STAGE := true
 BOARD_SUPPORTS_SOUND_TRIGGER := true
 # 使用 blobs 提供的 sound_trigger.primary.kalama.so，
-# 不编译开源 STHAL（依赖 QTI 音频 PAL 头，源码树已移出）
+# 不编译开源 STHAL（依赖 QTI 音频 PAL 头，设备产品排除其源码）
 BOARD_SUPPORTS_OPENSOURCE_STHAL := false
 # 本机的音频 HAL 全部来自 vendor blobs（android.hardware.audio.service_64、
 # libagm*/libpal* 等），不编译 QTI 源码音频栈——它依赖未公开的内核 uapi 头
@@ -68,7 +68,7 @@ TARGET_USES_QCOM_MM_AUDIO := false
 
 # ipacm 由 vendor blobs 提供；置 true 让 BoardConfigQcom.mk 不再把
 # hardware/qcom-caf/sm8550/data-ipa-cfg-mgr 加进 PRODUCT_SOONG_NAMESPACES。
-# local_manifests 已用 remove-project 移除该源码项目，命名空间不能再指向它。
+# 设备产品排除该源码，命名空间不能再指向它；其他产品仍可使用该项目。
 USE_DEVICE_SPECIFIC_DATA_IPA_CFG_MGR := true
 
 # Stock display HALs replace CAF SM8550; resolve the source power HAL's
@@ -109,6 +109,8 @@ BOARD_INCLUDE_DTB_IN_BOOTIMG := true
 BOARD_RAMDISK_USE_LZ4 := true
 
 TARGET_PREBUILT_KERNEL := $(DEVICE_PATH)-kernel/Image
+# Upstream LineageOS prebuilt-header interface; never replace its global generator.
+TARGET_PREBUILT_KERNEL_HEADERS := $(DEVICE_PATH)-kernel/kernel-headers.tar.gz
 # dtb 从原厂 vendor_boot 解包得到；dtb.img 由这个目录里的 .dtb 合并生成，
 # 供 vendor_boot.img 打包使用；真机的诊断 ramdisk/bootconfig 还需要额外匹配。
 BOARD_PREBUILT_DTBIMAGE_DIR := $(DEVICE_PATH)-kernel/dtb

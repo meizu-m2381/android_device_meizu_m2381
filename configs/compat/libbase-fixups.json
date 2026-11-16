@@ -1,0 +1,118 @@
+{
+  "library": "libbase_shim.so",
+  "patchelf": "patchelf-0_17_2",
+  "references": [
+    421619,
+    465067,
+    465271,
+    472159
+  ],
+  "files": [
+    {
+      "path": "vendor/bin/hw/android.hardware.sensors-service.multihal",
+      "sha256": "a7276d4fa6737458b3c140f5cc645c0988d3e033580c915015e3a36a5ba10ce2",
+      "fixed_sha256": "2ac787c83a2d65f906bb655e3cd72df0998e768e573980b8fc9c7cf01b03f48d",
+      "symbols": [
+        "_ZN7android4base15WriteStringToFdERKNSt3__112basic_stringIcNS1_11char_traitsIcEENS1_9allocatorIcEEEENS0_11borrowed_fdE"
+      ]
+    },
+    {
+      "path": "vendor/bin/qguard",
+      "sha256": "28fd2b45c2701c4b571c34d0f8d13a7e9a524f83bd03e43de4f5fb22a4341b4b",
+      "fixed_sha256": "1eafde9b80617d07274d8a85668d1af66c0ad40345cca1446612ce0024eb6005",
+      "symbols": [
+        "_ZN7android4base15WriteStringToFdERKNSt3__112basic_stringIcNS1_11char_traitsIcEENS1_9allocatorIcEEEENS0_11borrowed_fdE"
+      ]
+    },
+    {
+      "path": "vendor/lib/hw/vendor.rongcard.hardware.eid_rk@1.0-impl.so",
+      "sha256": "bb3e2eb428ebaece6455f407807a41822a2c960434e53bed53a12f3099b34a76",
+      "fixed_sha256": "bef511dead3c86d30ce8f588f3f5c5d71ab8b66f095a06db26b72bc8bb04cc67",
+      "symbols": [
+        "_ZN7android4base15WriteStringToFdERKNSt3__112basic_stringIcNS1_11char_traitsIcEENS1_9allocatorIcEEEENS0_11borrowed_fdE"
+      ]
+    },
+    {
+      "path": "vendor/lib/libavservices_minijail.so",
+      "sha256": "3581234195de9c3bf4565ae241089bc98293ff1cdccf27959c161d28d59e2e95",
+      "fixed_sha256": "b3f6e64c15640307dd1abf198ddebade6cf58e53c2e7a179be6a3b11f39520f7",
+      "symbols": [
+        "_ZN7android4base15WriteStringToFdERKNSt3__112basic_stringIcNS1_11char_traitsIcEENS1_9allocatorIcEEEENS0_11borrowed_fdE"
+      ]
+    },
+    {
+      "path": "vendor/lib/libboot_control_qti.so",
+      "sha256": "0462c955c5ed75f6e5591e3f445e79fc1658c3d0be8992fbff3f839a7692d172",
+      "fixed_sha256": "edcaae7c6dd2de773c1e519e5cf4cb310cda337150bc6c5c3a9146b697327c53",
+      "symbols": [
+        "_ZN7android4base4TrimERKNSt3__112basic_stringIcNS1_11char_traitsIcEENS1_9allocatorIcEEEE",
+        "_ZN7android4base8BasenameERKNSt3__112basic_stringIcNS1_11char_traitsIcEENS1_9allocatorIcEEEE"
+      ]
+    },
+    {
+      "path": "vendor/lib/libcodec2_hidl@1.0.so",
+      "sha256": "731f9cd68f140c29b49969a7fe88beef5fa8dc7ced279af92b3bb49b611850cb",
+      "fixed_sha256": "d572c94daab097958e0e626c62e593adc8bc6275b812fa0fc74f526cf811c1fc",
+      "symbols": [
+        "_ZN7android4base15WriteStringToFdERKNSt3__112basic_stringIcNS1_11char_traitsIcEENS1_9allocatorIcEEEENS0_11borrowed_fdE"
+      ]
+    },
+    {
+      "path": "vendor/lib/nfc_nci.nqx.default.hw.so",
+      "sha256": "41a28bee42ef3d27f36dcf8a71c81fb30ea089937e793d22fd5ad974a9af50fa",
+      "fixed_sha256": "8ef836b1201700a30697e51f1ef38541664182c4a1177c960d9e49c2f4513c91",
+      "symbols": [
+        "_ZN7android4base4TrimERKNSt3__112basic_stringIcNS1_11char_traitsIcEENS1_9allocatorIcEEEE"
+      ]
+    },
+    {
+      "path": "vendor/lib64/hw/vendor.rongcard.hardware.eid_rk@1.0-impl.so",
+      "sha256": "59baae07276f39f6e4f5af9c905d27ceb4a3680cea6e73b100f806e2ab7ba3ec",
+      "fixed_sha256": "2212329a874a12e5bb9970f74e870a42d9f1dba8be52b5f77ac6e542e857205f",
+      "symbols": [
+        "_ZN7android4base15WriteStringToFdERKNSt3__112basic_stringIcNS1_11char_traitsIcEENS1_9allocatorIcEEEENS0_11borrowed_fdE"
+      ]
+    },
+    {
+      "path": "vendor/lib64/libavservices_minijail.so",
+      "sha256": "a48c6de0c1b39b97aa2572c127e712dc6f45d930093e02bd2885af79558857d5",
+      "fixed_sha256": "bf0948b25fda5ced5c4e4584adcd0ae3aaf97fbd20f4b4afc7f9567df7b1186b",
+      "symbols": [
+        "_ZN7android4base15WriteStringToFdERKNSt3__112basic_stringIcNS1_11char_traitsIcEENS1_9allocatorIcEEEENS0_11borrowed_fdE"
+      ]
+    },
+    {
+      "path": "vendor/lib64/libboot_control_qti.so",
+      "sha256": "b22a1a9eed38d7c30a76da07d5de833d6a7257d07fcfe411606dd50d7d34006c",
+      "fixed_sha256": "7aee5d714d2d25d480492d297def227025e112206c8d8415805aa96a9631d0fa",
+      "symbols": [
+        "_ZN7android4base4TrimERKNSt3__112basic_stringIcNS1_11char_traitsIcEENS1_9allocatorIcEEEE",
+        "_ZN7android4base8BasenameERKNSt3__112basic_stringIcNS1_11char_traitsIcEENS1_9allocatorIcEEEE"
+      ]
+    },
+    {
+      "path": "vendor/lib64/libcodec2_hidl@1.0.so",
+      "sha256": "922fb1bcf7c8f7f3607e9afd9f980422db80f89daf63909d6b7e1bc3dab38df5",
+      "fixed_sha256": "b8bea6e353e72a37d725e5d9b9a8c83b0b1df64972f71dc0f61a37afcd29f8ec",
+      "symbols": [
+        "_ZN7android4base15WriteStringToFdERKNSt3__112basic_stringIcNS1_11char_traitsIcEENS1_9allocatorIcEEEENS0_11borrowed_fdE"
+      ]
+    },
+    {
+      "path": "vendor/lib64/libqfp-service.so",
+      "sha256": "696a97d02bff638a0186f21dce9b076d75ab56b00d21f904f30f8bd1d03e7a10",
+      "fixed_sha256": "7970f51924829a11f7406ce0f9bae12d79d06df36d3d19ada30da59e04103777",
+      "symbols": [
+        "_ZN7android4base15WriteStringToFdERKNSt3__112basic_stringIcNS1_11char_traitsIcEENS1_9allocatorIcEEEENS0_11borrowed_fdE"
+      ]
+    },
+    {
+      "path": "vendor/lib64/nfc_nci.nqx.default.hw.so",
+      "sha256": "704e5280c0461198321ffc9c05e99fc137b2246d338616ea0d5ca4867c04530a",
+      "fixed_sha256": "5b9909c3ba7525041df68bccc1ad63344c2bf6338a0d527600ddc4b92046269c",
+      "symbols": [
+        "_ZN7android4base4TrimERKNSt3__112basic_stringIcNS1_11char_traitsIcEENS1_9allocatorIcEEEE"
+      ]
+    }
+  ]
+}
