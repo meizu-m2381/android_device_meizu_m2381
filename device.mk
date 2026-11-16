@@ -17,6 +17,10 @@ PRODUCT_PACKAGES += libbase_shim:32 libbase_shim:64
 # a libbase dependency shared back into the current vendor namespace.
 PRODUCT_PACKAGES += libprocessgroup.vendor:64
 
+# Camera HAL dlopen reaches CallStack; keep its unwind dependency in the vendor
+# namespace instead of VNDK33 libraries with the old libbase ABI.
+PRODUCT_PACKAGES += libutilscallstack.vendor libunwindstack.vendor
+
 # Keep the legacy 32-bit codec stack separate from the current OMX helper.
 PRODUCT_PACKAGES += libui_shim.vendor:32 m2381_bufferqueue_helper_v33
 
