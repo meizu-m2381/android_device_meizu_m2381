@@ -2,6 +2,11 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+# The stock 5.15 kernel panics in the QCOM watchdog while suspending via
+# s2idle. Select its platform suspend path before SystemSuspend starts.
+on early-init
+    write /sys/power/mem_sleep deep
+
 # Enable all gesture
 on post-fs-data
     chmod 0777 /sys/devices/platform/mx-gs/gesture_control
