@@ -72,7 +72,7 @@ include $(BUILD_PREBUILT)
 
 # 诊断版本预编译与 init 完全相同的分离策略，不能安装原厂整包二进制，
 # 也不能用源码 vendor 策略替代实际安装的 API 33 厂商策略。
-# check_split_policy.py 的 -N 与 init 运行时保持一致；不表示 neverallow 适配完成。
+# tools/compile_split_policy.py 的 -N 与 init 运行时保持一致；不表示 neverallow 适配完成。
 include $(CLEAR_VARS)
 LOCAL_MODULE := m2381_precompiled_sepolicy
 LOCAL_MODULE_CLASS := ETC

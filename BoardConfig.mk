@@ -96,7 +96,7 @@ TARGET_FS_CONFIG_GEN := $(DEVICE_PATH)/configs/config.fs
 # 目前没有 m2381 的内核源码与 DTS：meizu-sm8550-kernel 的 DT/config 只覆盖
 # m2468（魅族 21 Note）。因此第一阶段直接复用原厂 boot.img 中的 Image，
 # 当前真机使用基于原厂输入重打包的诊断 boot/vendor_boot 启动链；dtbo 沿用原厂。
-# 默认构建尚不能自动复现该链，详见 docs/status.md 与 diagnostics/README.md。
+# 默认构建尚不能自动复现该链，详见 manifest 仓 docs/status.md。
 #
 # TODO(阶段 2.5)：从 dtbo_b.img 反编译 DTS，基于 sm8550 通用内核补 m2381 DT，
 #                  再把这里切回 TARGET_KERNEL_SOURCE 的源码编译路径。

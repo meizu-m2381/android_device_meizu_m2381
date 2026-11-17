@@ -38,15 +38,13 @@ Audio, display, camera, GNSS and boot-control services are taken from vendor
 blobs. The matching QTI source stacks depend on kernel UAPI headers that the
 Meizu kernel source does not publish, so they are not built from source.
 
-## Extracting files
+## Vendor inputs
 
-```bash
-./extract-files.py
-./setup-makefiles.py
-```
-
-`proprietary-files.txt` lists 5011 vendor files. Binaries are not stored here;
-see `proprietary_vendor_meizu_m2381`.
+The matching fixed vendor inputs are maintained in
+`proprietary_vendor_meizu_m2381`; retrieve them with Git LFS and verify them
+using the manifest repository's input checks.
+`proprietary-files.txt` records the extracted paths; this device tree does not
+regenerate vendor makefiles during a normal build.
 
 ## 平台隔离
 
