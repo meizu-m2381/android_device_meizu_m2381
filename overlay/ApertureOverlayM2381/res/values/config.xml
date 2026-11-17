@@ -7,4 +7,11 @@
         <item>2</item>
         <item>4</item>
     </string-array>
+    <!-- Stock metadata advertises 60 fps through Meizu vendor tables only.
+         These regular video sessions were verified on all three cameras. -->
+    <string-array name="config_additionalVideoConfigurations">
+        <item>0</item> <item>hd|fhd|uhd</item> <item>60</item>
+        <item>1</item> <item>hd|fhd|uhd</item> <item>60</item>
+        <item>3</item> <item>hd|fhd|uhd</item> <item>60</item>
+    </string-array>
 </resources>
