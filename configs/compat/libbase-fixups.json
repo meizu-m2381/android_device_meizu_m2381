@@ -9,7 +9,9 @@
     394610,
     394611,
     410069,
-    401141
+    401141,
+    419259,
+    418511
   ],
   "files": [
     {
@@ -144,6 +146,32 @@
       ],
       "symbols": [
         "_ZN7android19GraphicBufferMapper4lockEPK13native_handlejRKNS_4RectEPPvPiS9_"
+      ]
+    },
+    {
+      "path": "vendor/lib64/libqcrilNr.so",
+      "sha256": "95d5579c0e1ef21aaec50dea5dac54ee24674c6980c446cb3758f40364be9a23",
+      "fixed_sha256": "f18059fb78f5ee18afa5c808f456f74fa7615c598dacb243a397057ca9237a24",
+      "add_needed": [],
+      "binary_replacements": [
+        {
+          "before": "persist.vendor.radio.poweron_opt",
+          "after": "persist.vendor.radio.poweron_ign",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "vendor/lib64/libril-db.so",
+      "sha256": "0ced922c9349b852e6242e3c71cadcacd2a3d8e080f9506847ee1f7996af7e90",
+      "fixed_sha256": "a6eac8e53580d75709b7b998247e4e68c1bccaf21bdb86b834fa4003e4ff12e8",
+      "add_needed": [],
+      "binary_replacements": [
+        {
+          "before": "persist.vendor.radio.poweron_opt",
+          "after": "persist.vendor.radio.poweron_ign",
+          "count": 1
+        }
       ]
     }
   ]

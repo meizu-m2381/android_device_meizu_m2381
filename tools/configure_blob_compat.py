@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Apply pinned LineageOS shim/dependency fixups, preserving stock inputs.
+"""Apply pinned LineageOS ELF fixups, preserving stock inputs.
 
-Uses the same DT_NEEDED fixup as upstream extract_utils.blob_fixup.add_needed.
+Uses upstream DT_NEEDED fixups and pinned, same-length binary replacements.
 Only separate vendor/compat copies and their packaging rules are changed.
 """
 import argparse
@@ -62,6 +62,15 @@ def configure(aosp, device, vendor, apply=False):
             for index, (entry, source, output) in enumerate(plan):
                 fixed = Path(temporary) / str(index)
                 fixed.write_bytes(source.read_bytes())
+                for replacement in entry.get('binary_replacements', []):
+                    before = replacement['before'].encode('ascii')
+                    after = replacement['after'].encode('ascii')
+                    data = fixed.read_bytes()
+                    if not before or len(before) != len(after):
+                        raise ValueError(f'Binary replacement must preserve length: {source}')
+                    if data.count(before) != replacement['count']:
+                        raise ValueError(f'Unexpected binary replacement count: {source}')
+                    fixed.write_bytes(data.replace(before, after))
                 additions = entry.get('add_needed', [manifest['library']])
                 replacements = entry.get('replace_needed', {})
                 command = [str(tool)]
@@ -69,7 +78,8 @@ def configure(aosp, device, vendor, apply=False):
                     command += ['--add-needed', needed]
                 for before, after in replacements.items():
                     command += ['--replace-needed', before, after]
-                subprocess.run([*command, str(fixed)], check=True)
+                if len(command) > 1:
+                    subprocess.run([*command, str(fixed)], check=True)
                 if sha256(fixed) != entry['fixed_sha256']:
                     raise ValueError(f'Unexpected patchelf output: {source}')
                 dependencies = subprocess.check_output([str(tool), '--print-needed', str(fixed)], text=True).splitlines()
