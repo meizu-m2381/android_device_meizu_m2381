@@ -1683,6 +1683,13 @@
     <carrier_config mcc="460" mnc="01">
         <int name="eutran_rsrp_hysteresis_db_int" value="1" />
         <boolean name="use_only_rsrp_for_lte_signal_bar_bool" value="true" />
+        <!-- Match this carrier's stock LTE scale for NR, following LineageOS 512834. -->
+        <int-array name="5g_nr_ssrsrp_thresholds_int_array" num="4">
+            <item value="-120" />
+            <item value="-118" />
+            <item value="-114" />
+            <item value="-105" />
+        </int-array>
         <int-array name="lte_rsrp_thresholds_int_array" num="4">
             <item value="-120" />
             <item value="-118" />

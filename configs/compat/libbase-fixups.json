@@ -8,9 +8,21 @@
     472159,
     394610,
     394611,
-    410069
+    410069,
+    401141
   ],
   "files": [
+    {
+      "path": "vendor/lib64/vendor.libdpmframework.so",
+      "sha256": "7858e739d0e99d3926d876e3ac795e4944a67d9b9ee679880bcf3c1de480ca20",
+      "fixed_sha256": "40b6220e1bb7dd49c06b1f6f2938a7288a83a30b112ca9356158223b0b0ba8ed",
+      "add_needed": [
+        "libhidlbase_shim.so"
+      ],
+      "symbols": [
+        "_ZN7android8hardware6Parcel7setDataEPKhm"
+      ]
+    },
     {
       "path": "vendor/bin/hw/android.hardware.sensors-service.multihal",
       "sha256": "a7276d4fa6737458b3c140f5cc645c0988d3e033580c915015e3a36a5ba10ce2",

@@ -13,6 +13,9 @@ $(call inherit-product, vendor/meizu/m2381/m2381-vendor.mk)
 # Legacy API 33 vendor binaries use LineageOS's upstream compatibility shim.
 PRODUCT_PACKAGES += libbase_shim:32 libbase_shim:64
 
+# Stock DPM uses Parcel::setData, provided by the official LineageOS shim.
+PRODUCT_PACKAGES += libhidlbase_shim:64
+
 # qguard must use the current vendor ABI, not VNDK33 libprocessgroup with
 # a libbase dependency shared back into the current vendor namespace.
 PRODUCT_PACKAGES += libprocessgroup.vendor:64
