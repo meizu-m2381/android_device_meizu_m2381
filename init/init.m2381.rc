@@ -2,6 +2,11 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+# The M2381 bootloader predates QSPA. Stock IMS and qcrilmsgtunnel require
+# this modem feature flag before PackageManager scans system_ext packages.
+on early-init
+    setprop ro.boot.vendor.qspa.modem enabled
+
 # The stock 5.15 kernel panics in the QCOM watchdog while suspending via
 # s2idle. Select the platform suspend path during init and after the stock
 # kernel post-boot script, which otherwise overwrites mem_sleep with s2idle.

@@ -1,5 +1,5 @@
-# 由 backup/blobs/blobs.tar.gz 生成（原机 Android 16 / vendor API 33）
-# 格式：/vendor 相对路径；行首 - 表示 32 位库
+# 来自 backup/blobs/blobs.tar.gz 和同机原厂 super（Android 16 / vendor API 33）
+# 格式：分区相对路径；行首 - 表示 32 位库
 -vendor/lib/android.automotive.watchdog-V2-ndk.so
 -vendor/lib/android.frameworks.cameraservice.common@2.0.so
 -vendor/lib/android.frameworks.cameraservice.device@2.0.so
@@ -5032,3 +5032,24 @@ vendor_dlkm/etc/NOTICE.xml.gz
 vendor_dlkm/etc/build.prop
 vendor_dlkm/etc/fs_config_dirs
 vendor_dlkm/etc/fs_config_files
+
+# 原厂 system_ext MMTEL 栈；安装规则见 vendor/meizu/m2381/ims-stack.mk。
+# diag AIDL 原始路径为 system/lib64，随 IMS 安装到 system_ext/lib64。
+system_ext/app/QtiTelephonyService/QtiTelephonyService.apk
+system_ext/etc/permissions/qcrilhook.xml
+system_ext/etc/permissions/telephony_system-ext_privapp-permissions-qti.xml
+system_ext/framework/qcrilhook.jar
+system_ext/lib64/lib-imsvt.so
+system_ext/lib64/lib-imsvtextutils.so
+system_ext/lib64/lib-imsvtutils.so
+system_ext/lib64/lib-imsvideocodec.so
+system_ext/lib64/libdiag_system.so
+system_ext/lib64/libimscamera_jni.so
+system_ext/lib64/libimsmedia_jni.so
+system_ext/lib64/vendor.qti.ImsRtpService-V2-ndk.so
+system_ext/lib64/vendor.qti.diaghal@1.0.so
+system/lib64/vendor.qti.diaghal-V1-ndk.so:system_ext/lib64/vendor.qti.diaghal-V1-ndk.so
+system_ext/lib64/vendor.qti.imsrtpservice@3.0.so
+system_ext/lib64/vendor.qti.imsrtpservice@3.1.so
+system_ext/priv-app/ims/ims.apk
+system_ext/priv-app/qcrilmsgtunnel/qcrilmsgtunnel.apk

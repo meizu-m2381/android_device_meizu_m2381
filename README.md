@@ -46,6 +46,11 @@ using the manifest repository's input checks.
 `proprietary-files.txt` records the extracted paths; this device tree does not
 regenerate vendor makefiles during a normal build.
 
+原厂 IMS 和 QCRIL 消息通道由配套 vendor 仓安装，网络共享 UID 的三个 APK
+使用当前构建的 platform 证书。M2381 的旧 bootloader 没有提供 QSPA modem
+标记，设备 init 在扫描应用前设置该硬件标记，以允许原厂 IMS 应用被加载。
+输入来源、官方参考和实测边界见 manifest 仓的 `docs/mobile-network.md`。
+
 ## 平台隔离
 
 设备产品使用官方 LineageOS libbase_shim（32/64 位）、设备 linker 配置和 TARGET_PREBUILT_KERNEL_HEADERS。HAL 源码只通过 PRODUCT_SOURCE_ROOT_DIRS 在本产品排除，不移除上游项目。固定 blob 修补清单位于 configs/compat/libbase-fixups.json，tools/configure_blob_compat.py 生成独立 vendor/compat 副本，原厂输入保持不变。内核头选择器需要在 lunch 后导出实际 TARGET_PREBUILT_KERNEL_HEADERS；使用 manifest 仓库的新构建入口完成此步骤。
