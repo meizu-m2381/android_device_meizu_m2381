@@ -69,19 +69,21 @@ class Vibrator final : public BnVibrator {
                              const std::shared_ptr<IVibratorCallback>& callback,
                              int32_t* durationMs) override {
         if (callback) return unsupported();
-        int32_t waveform, gain;
+        int32_t waveform;
         switch (effect) {
-            case Effect::TEXTURE_TICK: waveform = 8; gain = 8; break;
+            case Effect::TEXTURE_TICK: waveform = 8; break;
             // Flyme maps TICK/CLICK/HEAVY_CLICK to vendor effects
             // 21000/31008/30900, selecting RAM 11/13/3 in haptic_hv.
-            case Effect::TICK: waveform = 11; gain = 32; break;
-            case Effect::CLICK: waveform = 13; gain = 48; break;
-            case Effect::HEAVY_CLICK: waveform = 3; gain = 96; break;
+            case Effect::TICK: waveform = 11; break;
+            case Effect::CLICK: waveform = 13; break;
+            case Effect::HEAVY_CLICK: waveform = 3; break;
             default: return unsupported();
         }
         switch (strength) {
-            case EffectStrength::LIGHT: gain = (gain * 40 + 50) / 100; break;
-            case EffectStrength::MEDIUM: gain = (gain * 65 + 50) / 100; break;
+            // Flyme's ordinary prebaked path forwards the effect ID only;
+            // it does not apply the Android strength to the motor gain.
+            case EffectStrength::LIGHT:
+            case EffectStrength::MEDIUM:
             case EffectStrength::STRONG: break;
             default: return unsupported();
         }
@@ -90,7 +92,7 @@ class Vibrator final : public BnVibrator {
         // value is a completion budget, NOT a pulse length: the chip plays
         // the complete 6/10/16 ms waveform, including its tail, and stops itself.
         // Allow for the driver's asynchronous I2C setup before framework off().
-        auto status = startLocked(kEffectCompletionMs, gain, waveform);
+        auto status = startLocked(kEffectCompletionMs, kDefaultGain, waveform);
         if (status.isOk()) *durationMs = kEffectCompletionMs;
         return status;
     }
@@ -99,7 +101,8 @@ class Vibrator final : public BnVibrator {
             return ndk::ScopedAStatus::fromExceptionCode(EX_ILLEGAL_ARGUMENT);
         }
         // Retain a nonzero gain for every valid nonzero framework amplitude.
-        const int32_t gain = std::max(1, static_cast<int32_t>(std::lround(amplitude * kMaxGain)));
+        // Flyme truncates amplitude * 128 when converting it to an integer.
+        const int32_t gain = std::max(1, static_cast<int32_t>(amplitude * kMaxGain));
         std::lock_guard<std::mutex> lock(mutex_);
         return writeGain(gain);
     }
@@ -135,11 +138,11 @@ class Vibrator final : public BnVibrator {
     }
 
   private:
-    // The original fixed 0x80 makes short UI feedback too strong on this device.
-    // A ceiling of 0x60 was confirmed comfortable in the device comparison.
-    // Keep the default at half the ceiling and scale effects within it.
-    static constexpr int32_t kMaxGain = 0x60;
-    static constexpr int32_t kDefaultGain = 0x30;
+    // Stock enable/off uses 0x80; Flyme's MzVibrateThread maps an explicit
+    // waveform amplitude to amplitude * 128. Do not halve that baseline or
+    // attenuate each RAM effect a second time: its samples define its shape.
+    static constexpr int32_t kMaxGain = 0x80;
+    static constexpr int32_t kDefaultGain = 0x80;
     static constexpr int32_t kTimedWaveform = 1;
     static constexpr int32_t kEffectCompletionMs = 30;
     static ndk::ScopedAStatus unsupported() {
@@ -237,7 +240,7 @@ int main(int argc, char** argv) {
     ABinderProcess_setThreadPoolMaxThreadCount(0);
     auto vibrator = ndk::SharedRefBase::make<aidl::android::hardware::vibrator::Vibrator>();
     CHECK(vibrator->off().isOk()) << "Awinic timed_output is unavailable";
-    CHECK(vibrator->setAmplitude(0.5f).isOk()) << "Awinic gain is unavailable";
+    CHECK(vibrator->setAmplitude(1.0f).isOk()) << "Awinic gain is unavailable";
     const std::string instance = std::string(vibrator->descriptor) + "/default";
     CHECK_EQ(AServiceManager_addService(vibrator->asBinder().get(), instance.c_str()), STATUS_OK);
     ABinderProcess_joinThreadPool();

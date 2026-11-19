@@ -39,9 +39,13 @@ int sequence() {
 }
 
 int gain() {
+    // gain_show reports cached driver state. Verify the chip's DATDBG
+    // register instead, so an inherited or overwritten gain cannot pass.
     unsigned value = 0;
-    const auto text = read("gain");
-    std::sscanf(text.c_str(), "gain = 0x%x", &value);
+    const auto text = read("reg");
+    const auto position = text.find("reg:0x39=");
+    if (position == std::string::npos) return -1;
+    std::sscanf(text.c_str() + position, "reg:0x39=0x%x", &value);
     return static_cast<int>(value);
 }
 
@@ -82,19 +86,17 @@ int main() {
         Effect effect;
         const char* name;
         int waveform;
-        int strongGain;
     };
     // Flyme's vendor effects 21000/31008/30900 select RAM 11/13/3.
     // Decimal wave numbers must not become hex, and short effects must not loop.
     const Profile profiles[] = {
-            {Effect::TEXTURE_TICK, "texture", 8, 8},
-            {Effect::TICK, "tick", 11, 32},
-            {Effect::CLICK, "click", 13, 48},
-            {Effect::HEAVY_CLICK, "heavy", 3, 96},
+            {Effect::TEXTURE_TICK, "texture", 8},
+            {Effect::TICK, "tick", 11},
+            {Effect::CLICK, "click", 13},
+            {Effect::HEAVY_CLICK, "heavy", 3},
     };
     const EffectStrength strengths[] = {EffectStrength::LIGHT, EffectStrength::MEDIUM,
                                          EffectStrength::STRONG};
-    const int percentages[] = {40, 65, 100};
     for (const auto& profile : profiles) {
         for (int s = 0; s < 3; ++s) {
             const std::string label = std::string(profile.name) + " strength " + std::to_string(s);
@@ -105,8 +107,7 @@ int main() {
             // After driver setup, the programmed sequence must be stable even
             // if the chip has already completed its naturally finite pulse.
             std::this_thread::sleep_for(15ms);
-            check(gain() == (profile.strongGain * percentages[s] + 50) / 100,
-                  label + " applies requested strength");
+            check(gain() == 128, label + " uses stock preset gain in chip register");
             check(sequence() == profile.waveform, label + " selects correct RAM entry");
             check(read("loop").find("seq1 loop: 0x00") != std::string::npos,
                   label + " does not loop");
@@ -123,8 +124,9 @@ int main() {
     std::this_thread::sleep_for(15ms);
     check(sequence() == 1 && read("loop").find("seq1 loop: 0x0f") != std::string::npos,
           "continuous playback resets waveform and enables loop");
-    check(vibrator->setAmplitude(0.25f).isOk() && gain() == 24, "quarter amplitude reaches driver");
-    check(vibrator->setAmplitude(1.0f).isOk() && gain() == 96, "full amplitude respects ceiling");
+    check(vibrator->setAmplitude(0.25f).isOk() && gain() == 32, "quarter amplitude reaches chip");
+    check(vibrator->setAmplitude(0.1f).isOk() && gain() == 12, "amplitude conversion truncates like Flyme");
+    check(vibrator->setAmplitude(1.0f).isOk() && gain() == 128, "full amplitude uses stock baseline");
     int32_t duration = 0;
     check(vibrator->perform(Effect::CLICK, EffectStrength::STRONG, nullptr, &duration).isOk(),
           "click interrupts continuous vibration");

@@ -6,7 +6,7 @@ service vendor.meizu.vibrator /vendor/bin/hw/android.hardware.vibrator-service.m
 on post-fs-data
     chown system system /sys/class/timed_output/vibrator/gain
     chmod 0660 /sys/class/timed_output/vibrator/gain
-    write /sys/class/timed_output/vibrator/gain 0x30
+    write /sys/class/timed_output/vibrator/gain 0x80
     chown system system /sys/class/timed_output/vibrator/waveform
     chmod 0660 /sys/class/timed_output/vibrator/waveform
     write /sys/class/timed_output/vibrator/waveform 0x1

@@ -42,19 +42,28 @@ AW8697（`haptic_hv`）驱动，不能用另一个 `qcom-hv-haptics` 输入设�
 波形表从文件偏移 5 开始，每项为大端起止地址（闭区间）。共有 20 项。
 本机 PWMDBG `0x2e` 的采样率位为 `0x40`，即 24 kHz。
 
-| AIDL 效果 | RAM 编号（十进制） | 样本数 | 自然播放时长 | STRONG 增益 |
+| AIDL 效果 | RAM 编号（十进制） | 样本数 | 自然播放时长 | 预设增益 |
 | --- | --- | --- | --- | --- |
-| TEXTURE_TICK | 8 | 139 | 5.79 ms | 8 |
-| TICK | 11 | 231 | 9.63 ms | 32 |
-| CLICK | 13 | 231 | 9.63 ms | 48 |
-| HEAVY_CLICK | 3 | 374 | 15.58 ms | 96 |
+| TEXTURE_TICK | 8 | 139 | 5.79 ms | 128 |
+| TICK | 11 | 231 | 9.63 ms | 128 |
+| CLICK | 13 | 231 | 9.63 ms | 128 |
+| HEAVY_CLICK | 3 | 374 | 15.58 ms | 128 |
 
-这些是实际短脉冲，不是空白占位项；结尾样本收敛至 0。LIGHT/MEDIUM 使用
-40%/65% 增益；不改升压电压、保护寄存器或校准数据。TICK/CLICK/HEAVY_CLICK
+这些是实际短脉冲，不是空白占位项；结尾样本收敛至 0。不改升压电压、保护寄存器
+或校准数据。TICK/CLICK/HEAVY_CLICK
 依据本机 Flyme 12.7 的效果 21000/31008/30900 及驱动映射选择 RAM 11/13/3，
 替代第一轮的 12/17/16。标准 DRAG_START 通过 HEAVY_CLICK 使用 RAM 3。
-TEXTURE_TICK 沿用 RAM 8；增益仍使用此前的设备调校值，播放仍走 waveform/enable，
-不是移植 Flyme 的 GPIO on_off 完整通路，因此不能宣称强度和手感完全相同。
+TEXTURE_TICK 沿用 RAM 8。预设效果统一使用原厂驱动的 0x80 基准增益，取消此前
+8/32/48/96 和 LIGHT/MEDIUM 40%/65% 的额外衰减。Flyme 的普通预设通路只传
+effect ID，不消费 PrebakedSegment 的 strength，因此三个合法强度值在本实现
+使用相同增益；框架的强度档位不会进一步降低这些预设的增益。时间/幅度接口仍可
+调节力度，setAmplitude 的 1.0 对应 128、0.25 对应 32，按 MzVibrateThread 的
+amplitude * 128 后转整数的比例处理（向零截断，合法正幅度最低保留 1）；on()
+和启动默认增益也恢复 128。
+原厂 on_off 可继承先前增益，原厂 enable 的默认及停止入口设置 128；本服务在每次
+效果启动时显式设置基准，避免继承先前的时间波形幅度。真机直接核对芯片寄存器
+0x39 的增益，不能只以 gain_show 缓存判断。播放仍走 waveform/enable，未移植
+Flyme 的 GPIO on_off 完整通路，因此不能宣称全部机械手感完全相同。
 原厂证据详见 manifest 仓 `docs/flyme-haptics.md`；最终触感需用户握持对比。
 
 - `waveform` 用 `%x` 解析，必须写 `0x11` 表示十进制 17；写 `17` 会选到
