@@ -149,6 +149,17 @@
       ]
     },
     {
+      "path": "vendor/lib64/libcodec2_vndk.so",
+      "sha256": "0ae67d2b13eeec69f763120090cdd67555563bb3f0d4a2d2aa088594699f7200",
+      "fixed_sha256": "2f551392d8badeb82b755395b141a009e57ac4ab96c3da9771e325bfba99ac97",
+      "add_needed": [
+        "libui_shim.so"
+      ],
+      "symbols": [
+        "_ZN7android19GraphicBufferMapper4lockEPK13native_handlejRKNS_4RectEPPvPiS9_"
+      ]
+    },
+    {
       "path": "vendor/lib64/libqcrilNr.so",
       "sha256": "95d5579c0e1ef21aaec50dea5dac54ee24674c6980c446cb3758f40364be9a23",
       "fixed_sha256": "f18059fb78f5ee18afa5c808f456f74fa7615c598dacb243a397057ca9237a24",

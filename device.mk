@@ -24,8 +24,10 @@ PRODUCT_PACKAGES += libprocessgroup.vendor:64
 # namespace instead of VNDK33 libraries with the old libbase ABI.
 PRODUCT_PACKAGES += libutilscallstack.vendor libunwindstack.vendor
 
+# Both stock codec architectures require the upstream GraphicBufferMapper shim.
+PRODUCT_PACKAGES += libui_shim.vendor:32 libui_shim.vendor:64
 # Keep the legacy 32-bit codec stack separate from the current OMX helper.
-PRODUCT_PACKAGES += libui_shim.vendor:32 m2381_bufferqueue_helper_v33
+PRODUCT_PACKAGES += m2381_bufferqueue_helper_v33
 
 # Source-built vendor libbinder needs this current system LLNDK library.
 # Keep the requirement in this product instead of editing the VNDK33 snapshot.
