@@ -68,3 +68,6 @@ blocklist v4l2loopback
 # tz_log_dlkm triggers early boot stalls on the m2381 PixelOS vendor stack.
 # See docs/boot-audit-20261112.md, rounds 33-36.
 blocklist tz_log_dlkm
+
+# Stock Flyme's swap extension is not part of the AOSP zram stack.
+blocklist smartswap_zram

@@ -13,16 +13,16 @@ BUILD_BROKEN_ELF_PREBUILT_PRODUCT_COPY_FILES := true
 
 # A/B（实测 ro.build.ab_update=true、ro.virtual_ab.enabled=true）
 AB_OTA_UPDATER := true
-# 注意：dtbo 与 recovery 不列入 OTA 更新范围。
+# dtbo 沿用与预编译内核配套的原厂分区，不列入 OTA 更新范围。
 #  - dtbo：本设备 TARGET_NEEDS_DTBOIMAGE := false，直接沿用原厂 dtbo，
 #    不重建也就不纳入 OTA，否则 add_img_to_target_files 会因找不到
 #    dtbo.img 而 AssertionError: Failed to find dtbo.img。
-#  - recovery：本阶段保留独立的原厂 recovery 分区，不纳入 OTA。
 AB_OTA_PARTITIONS += \
     boot \
     init_boot \
     odm \
     product \
+    recovery \
     system \
     system_dlkm \
     system_ext \
@@ -95,8 +95,7 @@ TARGET_FS_CONFIG_GEN := $(DEVICE_PATH)/configs/config.fs
 #
 # 目前没有 m2381 的内核源码与 DTS：meizu-sm8550-kernel 的 DT/config 只覆盖
 # m2468（魅族 21 Note）。因此第一阶段直接复用原厂 boot.img 中的 Image，
-# 当前真机使用基于原厂输入重打包的诊断 boot/vendor_boot 启动链；dtbo 沿用原厂。
-# 默认构建尚不能自动复现该链，详见 manifest 仓 docs/status.md。
+# boot/init_boot/vendor_boot/recovery 均由标准构建规则生成；dtbo 沿用原厂。
 #
 # TODO(阶段 2.5)：从 dtbo_b.img 反编译 DTS，基于 sm8550 通用内核补 m2381 DT，
 #                  再把这里切回 TARGET_KERNEL_SOURCE 的源码编译路径。
@@ -112,8 +111,10 @@ TARGET_PREBUILT_KERNEL := $(DEVICE_PATH)-kernel/Image
 # Upstream LineageOS prebuilt-header interface; never replace its global generator.
 TARGET_PREBUILT_KERNEL_HEADERS := $(DEVICE_PATH)-kernel/kernel-headers.tar.gz
 # dtb 从原厂 vendor_boot 解包得到；dtb.img 由这个目录里的 .dtb 合并生成，
-# 供 vendor_boot.img 打包使用；真机的诊断 ramdisk/bootconfig 还需要额外匹配。
-BOARD_PREBUILT_DTBIMAGE_DIR := $(DEVICE_PATH)-kernel/dtb
+# 供 vendor_boot.img 打包使用。
+# 原厂 DT 内嵌 ext4 vendor 规则优先于 ramdisk fstab；独立兼容副本仅禁用它。
+# 用内核仓 tools/prepare_android_dtb.py 复现，原始 DTB 保留。
+BOARD_PREBUILT_DTBIMAGE_DIR := $(DEVICE_PATH)-kernel/dtb/android
 
 # vendor/lineage/build/tasks/kernel.mk 会用它做 GKI 版本判断，
 # 即使使用预编译内核也必须给出（否则 is-version-* 宏报 Argument missing）
@@ -129,8 +130,17 @@ TARGET_KERNEL_VERSION := 5.15
 # ---------------------------------------------------------------------------
 M2381_FIRST_STAGE := $(strip $(shell cat $(DEVICE_PATH)/modules/modules.list.first_stage))
 
-BOARD_VENDOR_RAMDISK_KERNEL_MODULES :=     $(addprefix $(DEVICE_PATH)/modules_prebuilt/, $(M2381_FIRST_STAGE))
+M2381_RECOVERY_MODULES := $(strip $(shell cat $(DEVICE_PATH)/modules/modules.list.recovery))
+M2381_RECOVERY_AUDIO_MODULES := \
+    snd_event_dlkm.ko q6_pdr_dlkm.ko q6_notifier_dlkm.ko gpr_dlkm.ko \
+    spf_core_dlkm.ko adsp_loader_dlkm.ko
+
+BOARD_VENDOR_RAMDISK_KERNEL_MODULES := \
+    $(addprefix $(DEVICE_PATH)/modules_prebuilt/, $(filter-out $(M2381_RECOVERY_AUDIO_MODULES) qti_battery_charger.ko,$(sort $(M2381_FIRST_STAGE) $(M2381_RECOVERY_MODULES)))) \
+    $(addprefix vendor/meizu/m2381/proprietary/vendor_dlkm/lib/modules/,$(M2381_RECOVERY_AUDIO_MODULES)) \
+    vendor/meizu/m2381/compat/vendor_dlkm/lib/modules/qti_battery_charger.ko
 BOARD_VENDOR_RAMDISK_KERNEL_MODULES_LOAD := $(M2381_FIRST_STAGE)
+BOARD_VENDOR_RAMDISK_RECOVERY_KERNEL_MODULES_LOAD := $(M2381_RECOVERY_MODULES)
 BOARD_VENDOR_RAMDISK_KERNEL_MODULES_BLOCKLIST_FILE := $(DEVICE_PATH)/modules/modules.blocklist.vendor
 
 # 原厂 cmdline 实测子集（完整见 backup/meta/cmdline.txt）
@@ -147,7 +157,6 @@ BOARD_BOOTCONFIG := \
     androidboot.hardware=qcom \
     androidboot.memcg=1 \
     androidboot.usbcontroller=a600000.dwc3 \
-    androidboot.load_modules_parallel=true \
     androidboot.console=ttyMSM0 \
     androidboot.selinux=permissive
 
@@ -200,9 +209,8 @@ TARGET_BOARD_PLATFORM := kalama
 TARGET_BOOTLOADER_BOARD_NAME := kalama
 
 # Recovery
-# 本机有独立的 recovery_a/recovery_b（每个 100 MiB）。本阶段保留原厂
-# recovery，尚未移植自定义 recovery，因此不构建或更新该镜像。
-TARGET_NO_RECOVERY := true
+# 与原厂及 LineageOS SM8550 一致：独立 recovery ramdisk 复用 boot 的内核。
+BOARD_EXCLUDE_KERNEL_FROM_RECOVERY_IMAGE := true
 TARGET_RECOVERY_FSTAB := $(DEVICE_PATH)/init/fstab.qcom
 TARGET_RECOVERY_PIXEL_FORMAT := RGBX_8888
 TARGET_USERIMAGES_USE_EXT4 := true

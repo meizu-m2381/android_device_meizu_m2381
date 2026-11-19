@@ -1702,8 +1702,6 @@ vendor/bin/hw/android.hardware.security.keymint-service-qti
 vendor/bin/hw/android.hardware.security.keymint-service-spu-qti
 vendor/bin/hw/android.hardware.sensors-service.multihal
 vendor/bin/hw/android.hardware.thermal@2.0-service.qti-v2
-vendor/bin/hw/android.hardware.usb.gadget@1.1-service-qti
-vendor/bin/hw/android.hardware.usb@1.2-service-qti
 vendor/bin/hw/android.hardware.weaver-service-spu-qti
 vendor/bin/hw/capabilityconfigstoretest
 vendor/bin/hw/pasrknob
@@ -1771,7 +1769,6 @@ vendor/bin/init.qcom.post_boot.sh
 vendor/bin/init.qcom.sdio.sh
 vendor/bin/init.qcom.sensors.sh
 vendor/bin/init.qcom.sh
-vendor/bin/init.qcom.usb.sh
 vendor/bin/init.qti.display_boot.sh
 vendor/bin/init.qti.kernel.debug-kalama.sh
 vendor/bin/init.qti.kernel.debug.sh
@@ -2201,8 +2198,6 @@ vendor/etc/init/android.hardware.power-service.rc
 vendor/etc/init/android.hardware.security.keymint-service-qti.rc
 vendor/etc/init/android.hardware.sensors-service-multihal.rc
 vendor/etc/init/android.hardware.thermal@2.0-service.qti-v2.rc
-vendor/etc/init/android.hardware.usb.gadget@1.1-service-qti.rc
-vendor/etc/init/android.hardware.usb@1.2-service-qti.rc
 vendor/etc/init/cnd.rc
 vendor/etc/init/com.qualcomm.qti.wifidisplayhal@1.0-service.rc
 vendor/etc/init/dataadpl.rc
@@ -2215,7 +2210,6 @@ vendor/etc/init/feature_enabler_client.rc
 vendor/etc/init/fix.1347671.rc
 vendor/etc/init/hw/init.qcom.factory.rc
 vendor/etc/init/hw/init.qcom.rc
-vendor/etc/init/hw/init.qcom.usb.rc
 vendor/etc/init/hw/init.qti.kernel.rc
 vendor/etc/init/hw/init.qti.ufs.rc
 vendor/etc/init/hw/init.target.rc
@@ -2609,7 +2603,6 @@ vendor/etc/thermal.sgame.conf
 vendor/etc/thermal.super.conf
 vendor/etc/ueventd.rc
 vendor/etc/ufs_ffu_firmware.bin
-vendor/etc/usb_compositions.conf
 vendor/etc/vintf/compatibility_matrix.xml
 vendor/etc/vintf/manifest/android.hardware.atrace@1.0-service.xml
 vendor/etc/vintf/manifest/android.hardware.boot@1.2.xml
@@ -2628,8 +2621,6 @@ vendor/etc/vintf/manifest/android.hardware.radio.voice.xml
 vendor/etc/vintf/manifest/android.hardware.security.keymint-service-qti.xml
 vendor/etc/vintf/manifest/android.hardware.sensors-multihal.xml
 vendor/etc/vintf/manifest/android.hardware.thermal@2.0-service.qti.xml
-vendor/etc/vintf/manifest/android.hardware.usb.gadget@1.1-service.xml
-vendor/etc/vintf/manifest/android.hardware.usb@1.2-service.xml
 vendor/etc/vintf/manifest/bluetooth_audio.xml
 vendor/etc/vintf/manifest/bttpi-saidl.xml
 vendor/etc/vintf/manifest/c2_manifest_vendor.xml

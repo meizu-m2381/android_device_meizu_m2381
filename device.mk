@@ -394,14 +394,6 @@ PRODUCT_SHIPPING_API_LEVEL := 33
 # 原厂 API 33 vendor CIL 使用旧版 genfs 标签；见 Android.mk 的覆盖模块。
 PRODUCT_PACKAGES += m2381_legacy_genfs_labels_version
 
-# 本阶段不构建 recovery（BoardConfig 里 TARGET_NO_RECOVERY := true），
-# 导致 recovery_fstab 为空，build/make/core/Makefile 会据此把
-# build_ota_package 置为 false，进而完全不定义 INTERNAL_OTA_PACKAGE_TARGET，
-# 表现为 m pixelos 最后只剩一句 ln -f ""，OTA 包永远生成不出来。
-# 这里用官方开关强制开启 OTA 包生成。
-PRODUCT_BUILD_GENERIC_OTA_PACKAGE := true
-
-
 # Soong namespaces
 PRODUCT_SOONG_NAMESPACES += \
     $(LOCAL_PATH) \
