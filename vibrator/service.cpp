@@ -4,6 +4,7 @@
 #include <android-base/logging.h>
 #include <android/binder_manager.h>
 #include <android/binder_process.h>
+#include "Tiktap.h"
 
 #include <algorithm>
 #include <chrono>
@@ -12,16 +13,18 @@
 #include <cstdio>
 #include <mutex>
 #include <thread>
+#include <unistd.h>
 
 namespace aidl::android::hardware::vibrator {
 
 // m2381 has an Awinic I2C motor, independent of the QCOM haptics device.
 // Meizu's waveform/enable interface plays the stock RAM effects. The firmware
 // and this driver's sysfs ABI are documented in README.md beside this source.
-// Composition and calibrated frequency control are not implemented.
+// Tiktap RTP composition is isolated from the stock RAM effect path.
 class Vibrator final : public BnVibrator {
   public:
-    Vibrator() : worker_([this] { runTimer(); }) {}
+    Vibrator() : compositionAvailable_(meizu::TiktapProcess::available()),
+                 worker_([this] { runTimer(); }) {}
     ~Vibrator() override {
         {
             std::lock_guard<std::mutex> lock(mutex_);
@@ -29,14 +32,19 @@ class Vibrator final : public BnVibrator {
             changed_.notify_all();
         }
         worker_.join();
+        tiktap_.stop();
         writeDuration(0);
     }
     ndk::ScopedAStatus getCapabilities(int32_t* result) override {
-        *result = IVibrator::CAP_AMPLITUDE_CONTROL;
+        *result = IVibrator::CAP_AMPLITUDE_CONTROL |
+                  (compositionAvailable_ ? IVibrator::CAP_COMPOSE_EFFECTS : 0);
         return ndk::ScopedAStatus::ok();
     }
     ndk::ScopedAStatus off() override {
         std::lock_guard<std::mutex> lock(mutex_);
+        tiktap_.stop();
+        callback_.reset();
+        composing_ = false;
         auto result = writeDuration(0);
         if (!result.isOk()) return result;
         active_ = false;
@@ -59,6 +67,13 @@ class Vibrator final : public BnVibrator {
     }
     ndk::ScopedAStatus getSupportedPrimitives(std::vector<CompositePrimitive>* result) override {
         result->clear();
+        if (compositionAvailable_) {
+            *result = {CompositePrimitive::NOOP, CompositePrimitive::CLICK,
+                       CompositePrimitive::THUD, CompositePrimitive::SPIN,
+                       CompositePrimitive::QUICK_RISE, CompositePrimitive::SLOW_RISE,
+                       CompositePrimitive::QUICK_FALL, CompositePrimitive::LIGHT_TICK,
+                       CompositePrimitive::LOW_TICK};
+        }
         return ndk::ScopedAStatus::ok();
     }
     ndk::ScopedAStatus getSupportedAlwaysOnEffects(std::vector<Effect>* result) override {
@@ -108,14 +123,43 @@ class Vibrator final : public BnVibrator {
         return writeGain(gain);
     }
     ndk::ScopedAStatus setExternalControl(bool) override { return unsupported(); }
-    ndk::ScopedAStatus getCompositionDelayMax(int32_t*) override { return unsupported(); }
-    ndk::ScopedAStatus getCompositionSizeMax(int32_t*) override { return unsupported(); }
-    ndk::ScopedAStatus getPrimitiveDuration(CompositePrimitive, int32_t*) override {
-        return unsupported();
+    ndk::ScopedAStatus getCompositionDelayMax(int32_t* result) override {
+        if (!compositionAvailable_) return unsupported();
+        *result = meizu::kCompositionDelay;
+        return ndk::ScopedAStatus::ok();
     }
-    ndk::ScopedAStatus compose(const std::vector<CompositeEffect>&,
-                             const std::shared_ptr<IVibratorCallback>&) override {
-        return unsupported();
+    ndk::ScopedAStatus getCompositionSizeMax(int32_t* result) override {
+        if (!compositionAvailable_) return unsupported();
+        *result = meizu::kCompositionSize;
+        return ndk::ScopedAStatus::ok();
+    }
+    ndk::ScopedAStatus getPrimitiveDuration(CompositePrimitive primitive, int32_t* result) override {
+        if (!compositionAvailable_) return unsupported();
+        *result = meizu::primitiveDuration(primitive);
+        return *result < 0 ? unsupported() : ndk::ScopedAStatus::ok();
+    }
+    ndk::ScopedAStatus compose(const std::vector<CompositeEffect>& effects,
+                             const std::shared_ptr<IVibratorCallback>& callback) override {
+        if (!compositionAvailable_) return unsupported();
+        meizu::Composition plan;
+        const int error = meizu::makeComposition(effects, &plan);
+        if (error) return ndk::ScopedAStatus::fromExceptionCode(error);
+        std::lock_guard<std::mutex> lock(mutex_);
+        tiktap_.stop();
+        callback_.reset();
+        active_ = false;
+        ++generation_;
+        changed_.notify_all();
+        auto status = writeDuration(0);
+        if (!status.isOk()) return status;
+        if (!tiktap_.start(plan)) return ndk::ScopedAStatus::fromExceptionCode(EX_ILLEGAL_STATE);
+        callback_ = callback;
+        composing_ = true;
+        active_ = true;
+        deadline_ = std::chrono::steady_clock::now() +
+                    std::chrono::milliseconds(plan.durationMs + 500);
+        changed_.notify_all();
+        return ndk::ScopedAStatus::ok();
     }
     ndk::ScopedAStatus alwaysOnEnable(int32_t, Effect, EffectStrength) override {
         return unsupported();
@@ -153,6 +197,9 @@ class Vibrator final : public BnVibrator {
         // Stop/cancel the preceding kernel work before changing its waveform.
         // In particular, do not leave the infinite loop from a long on() in
         // effect when a short UI effect is requested next.
+        tiktap_.stop();
+        callback_.reset();
+        composing_ = false;
         auto result = writeDuration(0);
         if (!result.isOk()) return result;
         active_ = false;
@@ -218,11 +265,23 @@ class Vibrator final : public BnVibrator {
                 continue;
             }
             const auto generation = generation_;
-            if (changed_.wait_until(lock, deadline_, [this, generation] {
+            const auto wake = composing_ ? std::min(deadline_, std::chrono::steady_clock::now() +
+                                                             std::chrono::milliseconds(2)) : deadline_;
+            if (changed_.wait_until(lock, wake, [this, generation] {
                     return stopping_ || generation_ != generation;
                 })) continue;
+            if (composing_ && !tiktap_.finished()) {
+                if (std::chrono::steady_clock::now() < deadline_) continue;
+                LOG(ERROR) << "Tiktap completion watchdog expired";
+                tiktap_.stop();
+            }
             active_ = false;
+            composing_ = false;
             writeDuration(0);
+            auto callback = std::move(callback_);
+            lock.unlock();
+            if (callback) callback->onComplete();
+            lock.lock();
         }
     }
     std::mutex mutex_;
@@ -231,13 +290,21 @@ class Vibrator final : public BnVibrator {
     uint64_t generation_ = 0;
     bool active_ = false;
     bool stopping_ = false;
+    bool composing_ = false;
+    const bool compositionAvailable_;
+    meizu::TiktapProcess tiktap_;
+    std::shared_ptr<IVibratorCallback> callback_;
     std::thread worker_;
 };
 }  // namespace aidl::android::hardware::vibrator
 
 int main(int argc, char** argv) {
     ::android::base::InitLogging(argv, ::android::base::KernelLogger);
-    (void)argc;
+    if (argc > 1 && std::string(argv[1]) == "--tiktap-worker") _exit(meizu::tiktapWorker(argc, argv));
+    if (argc > 1 && std::string(argv[1]) == "--stop-tiktap") {
+        meizu::TiktapProcess::stopHardware();
+        return 0;
+    }
     ABinderProcess_setThreadPoolMaxThreadCount(0);
     auto vibrator = ndk::SharedRefBase::make<aidl::android::hardware::vibrator::Vibrator>();
     CHECK(vibrator->off().isOk()) << "Awinic timed_output is unavailable";

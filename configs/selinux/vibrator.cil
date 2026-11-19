@@ -2,3 +2,8 @@
 ; 源码 AIDL HAL 写入启停、gain 和 waveform；不扩大其他域的权限。
 (allow hal_vibrator_default vib_strength_sysfs (file (open write getattr)))
 (allow hal_vibrator_default vib_strength_sysfs (dir (search)))
+; 原厂组合算法在同域子进程内运行；只开放 Tiktap 的启动/停止 ioctl。
+(allow hal_vibrator_default self (process (fork signal sigchld)))
+(allow hal_vibrator_default hal_vibrator_default_exec (file (execute_no_trans)))
+(allow hal_vibrator_default proc_tiktap_buf (file (open read write getattr map ioctl)))
+(allowx hal_vibrator_default proc_tiktap_buf (ioctl file (0xff09 0xff0b)))

@@ -1,0 +1,6 @@
+# SPDX-License-Identifier: Apache-2.0
+# Same-domain exec isolates the stock algorithm's detached producer per request.
+allow hal_vibrator_default self:process { fork signal sigchld };
+allow hal_vibrator_default hal_vibrator_default_exec:file execute_no_trans;
+allow hal_vibrator_default vendor_proc_tiktap_buf:file { rw_file_perms map };
+allowxperm hal_vibrator_default vendor_proc_tiktap_buf:file ioctl { 0xff09 0xff0b };

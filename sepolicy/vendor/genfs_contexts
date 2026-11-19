@@ -1,3 +1,4 @@
 # SPDX-License-Identifier: Apache-2.0
 genfscon sysfs /kernel/display_drivers/hbm u:object_r:vendor_sysfs_fingerprint_hbm:s0
 genfscon sysfs /kernel/display_drivers/hbm_ready_status u:object_r:vendor_sysfs_fingerprint_hbm_ready:s0
+genfscon proc /tiktap_buf u:object_r:vendor_proc_tiktap_buf:s0

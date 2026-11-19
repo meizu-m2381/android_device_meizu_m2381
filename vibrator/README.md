@@ -13,8 +13,8 @@ AW8697（`haptic_hv`）驱动，不能用另一个 `qcom-hv-haptics` 输入设�
 真机旧日志还显示停止请求至 standby 有数毫秒到约 11 ms 的软件等待；这不是
 加速度测量，不能直接当作机械拖尾时长。
 
-强度区分、停止保护有用，但不足以证明各场景触感正确。频率校准与组合原语均
-未实现；不能仅为避免 framework 回退而宣称支持这些能力。
+强度区分、停止保护有用，但不足以证明各场景触感正确。频率校准未实现。
+组合原语现通过下述 Tiktap 后端接入，不依赖另一个高通输入设备。
 
 ## 官方参考与取舍
 
@@ -29,8 +29,8 @@ AW8697（`haptic_hv`）驱动，不能用另一个 `qcom-hv-haptics` 输入设�
   merged：有嗡感的波形不适合直接作为 CLICK/TICK；需按实际波形调校。
   其硬件与固件不同，不能直接迁移波形数据。
 - [LineageOS 513314](https://review.lineageos.org/c/LineageOS/android_hardware_lineage_interfaces/+/513314)，
-  merged：没有实际完成通知时不应声明 callback 能力。本服务继续只报告已实现的
-  amplitude control，完成由 framework 和 HAL 停止保护处理。
+  merged：没有实际完成通知时不应声明 callback 能力。本服务的 on/perform 仍不
+  声明回调；compose 则在隔离的 RTP 生产进程完成并停止硬件后通知完成。
 - [Oplus 强度处理](https://github.com/LineageOS/android_hardware_oplus/blob/e1d08a1858071bda70547ea2cff39e6a4ae0b0b9/aidl/vibrator/Vibrator.cpp#L307)
   的输入 FF 通路按 LIGHT/MEDIUM/STRONG 选择约 1/2、3/4、1 的相对幅度。
   本机只参考这组三档比例，使用自己的 128 基准；不复制其他硬件的寄存器或电压。
@@ -85,6 +85,43 @@ Flyme 的 GPIO on_off 完整通路，因此不能宣称全部机械手感完全�
 - 启动时由设备 init 将 `waveform` 节点权限设为 system:system 0660；沿用
   原厂 `vib_strength_sysfs` 标签和已有 HAL 写权限，不扩大其他域权限。
 
+## Tiktap 组合后端
+
+原厂算法和 AW8697 RTP 接口的还原及真机证据见 manifest 仓
+`docs/tiktap-composition.md`。仅在算法库、proc 节点可访问且原厂 Tiktap HIDL
+未运行时报告 CAP_COMPOSE_EFFECTS；设备 init 覆盖并禁用原厂 HIDL 服务，避免
+两个算法实例争用全局共享区。普通 RAM 预设、三档 gain 和 on/setAmplitude 保留。
+
+| 原语 | 时长 | 设备映射 |
+| --- | --- | --- |
+| NOOP | 0 ms | 只等待请求中的 delay，不启动马达 |
+| CLICK | 20 ms | 原厂 frequency=50 的 467 样本瞬态 |
+| THUD | 60 ms | 0/6/18/60 ms，强度 0/100/35/0、frequency=20 的撞击衰减包络 |
+| SPIN | 100 ms | 0/25/70/100 ms，强度 0/70/100/0、frequency=10/30/80/100 的动量包络 |
+| LIGHT_TICK | 12 ms | 原厂 frequency=100 的 272 样本带制动瞬态 |
+| LOW_TICK | 36 ms | 原厂 frequency=20 的 564 样本瞬态，后留约 12.5 ms 静默 |
+| QUICK_RISE | 30 ms | 0/12/25/30 ms 上升包络 |
+| SLOW_RISE | 100 ms | 0/40/90/100 ms 上升包络 |
+| QUICK_FALL | 25 ms | 0/3/12/25 ms 下降包络 |
+
+这些是当前 Android 标准语义的设备适配参数，不声称是 Flyme 的标准原语映射。
+THUD/SPIN 也是设备自定曲线，并非提取出的 Flyme 原语参数；frequency 是原厂
+抽象参数，不是 Hz。全部九项原语最多 16 项，每项 delay 0–1000 ms，严格拒绝非法 scale、
+NaN、未知原语和超限输入。全局 amplitude 固定 128，scale 通过各点强度表达；
+scale=0 使用最小输出而非触发原厂 amplitude=0 的默认峰值分支。用户关闭仍由
+framework 拦截；低/中/高由 framework 缩放传入的 scale。
+
+每次 compose 通过 posix_spawn 在同一可执行文件的工作模式中运行原厂库，
+避免其 detached 线程与下个请求共享状态。父进程取消时 kill/reap 旧生产进程，
+再发 STOP ioctl，随后才允许新的 RAM/RTP 播放。子进程设父进程死亡信号，
+init 在 HAL 异常退出时额外执行 STOP，保留原来的 enable=0 保护。
+
+完成不使用 on 返回、算法生成结束或最后一个 mmap 块被消费作为依据。以首次
+驱动消费之后的完整时间线加 10 ms 余量为截止点，子进程同步 off 后退出，父进程
+确认退出并再发 STOP 后才回调。另有 500 ms 余量的看门狗。该策略偏保守，不能
+替代硬件完成 IRQ；进程启动开销、长序列欠载和高负载时序仍需进一步测量。
+播放中不轮询整块 reg，因为它会占驱动锁约 110 ms。
+
 ## 验证
 
 在 Android 源码根目录完成 lunch 和预编译头变量导出后：
@@ -103,6 +140,9 @@ adb shell /data/local/tmp/m2381-vibrator-check
 检查四效果三强度、RAM 编号、循环标志、自动停止、时间波形振幅、抢占、旧计时器
 取消及非法参数。读取 GO/GLB_STATE 判断硬件待机，不以软件 `state` 冒充实际停止。
 测试期间会播放短振动，应避免其他应用同时触发振动。
+当前诊断还覆盖九个原语的完成回调、THUD/SPIN 混合时间线及满长度 SPIN 取消、
+五段 LOW_TICK、取消等待中的请求、
+RAM/RTP 双向抢占、非法组合参数及连续 20 次滑条请求替换。
 
 固件分析、寄存器和 Binder 检查不能代替加速度仪测量，也不证明所有应用的主观
 触感、来电可感知度、长期功耗或完整 CTS/VTS。测试记录见 manifest 仓功能状态。

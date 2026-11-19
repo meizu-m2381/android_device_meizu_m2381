@@ -1,3 +1,4 @@
 # SPDX-License-Identifier: Apache-2.0
 type vendor_sysfs_fingerprint_hbm, fs_type, sysfs_type;
 type vendor_sysfs_fingerprint_hbm_ready, fs_type, sysfs_type;
+type vendor_proc_tiktap_buf, fs_type, proc_type;
