@@ -1,6 +1,14 @@
 # SPDX-License-Identifier: Apache-2.0
-# Same-domain exec isolates the stock algorithm's detached producer per request.
-allow hal_vibrator_default self:process { fork signal sigchld };
-allow hal_vibrator_default hal_vibrator_default_exec:file execute_no_trans;
+# The same executable's worker mode enters a non-HAL domain. AOSP forbids
+# execute_no_trans from HAL domains, including re-executing the HAL itself.
+type vendor_tiktap_worker, domain;
+domain_auto_trans(hal_vibrator_default, hal_vibrator_default_exec, vendor_tiktap_worker)
+allow hal_vibrator_default vendor_tiktap_worker:process sigkill;
+allow vendor_tiktap_worker hal_vibrator_default:fd use;
+allow vendor_tiktap_worker self:process fork;
+allow vendor_tiktap_worker vendor_file:file { getattr open read execute map };
+write_logd(vendor_tiktap_worker)
 allow hal_vibrator_default vendor_proc_tiktap_buf:file { rw_file_perms map };
 allowxperm hal_vibrator_default vendor_proc_tiktap_buf:file ioctl { 0xff09 0xff0b };
+allow vendor_tiktap_worker vendor_proc_tiktap_buf:file { rw_file_perms map };
+allowxperm vendor_tiktap_worker vendor_proc_tiktap_buf:file ioctl { 0xff09 0xff0b };

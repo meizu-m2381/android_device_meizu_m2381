@@ -112,9 +112,18 @@ scale=0 使用最小输出而非触发原厂 amplitude=0 的默认峰值分支�
 framework 拦截；低/中/高由 framework 缩放传入的 scale。
 
 每次 compose 通过 posix_spawn 在同一可执行文件的工作模式中运行原厂库，
+工作模式自动切换到独立的 `vendor_tiktap_worker` 域，遵守 AOSP 禁止 HAL
+同域执行子进程的 neverallow；init 启动服务仍进入 `hal_vibrator_default`。
+工作域仅开放原厂库读取、日志及 Tiktap 节点和两个播放 ioctl，不授予 Binder
+服务权限。源码策略与实际安装的 API 33 CIL 保持相同转换和父子进程控制规则，
 避免其 detached 线程与下个请求共享状态。父进程取消时 kill/reap 旧生产进程，
 再发 STOP ioctl，随后才允许新的 RAM/RTP 播放。子进程设父进程死亡信号，
 init 在 HAL 异常退出时额外执行 STOP，保留原来的 enable=0 保护。
+
+域转换依据官方 [LineageOS HAL 限制](https://github.com/LineageOS/android_system_sepolicy/blob/lineage-23.2/private/hal_neverallows.te)
+和 AOSP `domain_auto_trans` 宏；源码 `precompiled_sepolicy` 和
+`sepolicy_neverallows` 检查已通过，实际 API 33 分离策略已合并编译通过。
+后者沿用设备现有 init 兼容编译路径，不代表完整 enforcing/CTS/VTS 验收。
 
 完成不使用 on 返回、算法生成结束或最后一个 mmap 块被消费作为依据。以首次
 驱动消费之后的完整时间线加 10 ms 余量为截止点，子进程同步 off 后退出，父进程
