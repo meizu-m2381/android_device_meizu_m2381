@@ -1603,8 +1603,25 @@
         </string-array>
         <boolean name="vonr_enabled_bool" value="true" />
     </carrier_config>
+    <!-- China: align NR with the platform LTE default when stock has no carrier scale.
+         Per-carrier stock LTE thresholds below take precedence (LineageOS 512834). -->
+    <carrier_config mcc="460">
+        <int-array name="5g_nr_ssrsrp_thresholds_int_array" num="4">
+            <item value="-128" />
+            <item value="-118" />
+            <item value="-108" />
+            <item value="-98" />
+        </int-array>
+    </carrier_config>
     <carrier_config mcc="460" mnc="00">
         <boolean name="use_only_rsrp_for_lte_signal_bar_bool" value="true" />
+        <!-- Align NR with this carrier's stock LTE scale (LineageOS 512834). -->
+        <int-array name="5g_nr_ssrsrp_thresholds_int_array" num="4">
+            <item value="-120" />
+            <item value="-113" />
+            <item value="-105" />
+            <item value="-97" />
+        </int-array>
         <int-array name="lte_rsrp_thresholds_int_array" num="4">
             <item value="-120" />
             <item value="-113" />
@@ -1746,6 +1763,13 @@
     </carrier_config>
     <carrier_config mcc="460" mnc="02">
         <boolean name="use_only_rsrp_for_lte_signal_bar_bool" value="true" />
+        <!-- Align NR with this carrier's stock LTE scale (LineageOS 512834). -->
+        <int-array name="5g_nr_ssrsrp_thresholds_int_array" num="4">
+            <item value="-120" />
+            <item value="-113" />
+            <item value="-105" />
+            <item value="-97" />
+        </int-array>
         <int-array name="lte_rsrp_thresholds_int_array" num="4">
             <item value="-120" />
             <item value="-113" />
@@ -1981,6 +2005,13 @@
     <carrier_config mcc="460" mnc="06">
         <int name="eutran_rsrp_hysteresis_db_int" value="1" />
         <boolean name="use_only_rsrp_for_lte_signal_bar_bool" value="true" />
+        <!-- Align NR with this carrier's stock LTE scale (LineageOS 512834). -->
+        <int-array name="5g_nr_ssrsrp_thresholds_int_array" num="4">
+            <item value="-120" />
+            <item value="-118" />
+            <item value="-114" />
+            <item value="-105" />
+        </int-array>
         <int-array name="lte_rsrp_thresholds_int_array" num="4">
             <item value="-120" />
             <item value="-118" />
@@ -2030,6 +2061,13 @@
     </carrier_config>
     <carrier_config mcc="460" mnc="07">
         <boolean name="use_only_rsrp_for_lte_signal_bar_bool" value="true" />
+        <!-- Align NR with this carrier's stock LTE scale (LineageOS 512834). -->
+        <int-array name="5g_nr_ssrsrp_thresholds_int_array" num="4">
+            <item value="-120" />
+            <item value="-113" />
+            <item value="-105" />
+            <item value="-97" />
+        </int-array>
         <int-array name="lte_rsrp_thresholds_int_array" num="4">
             <item value="-120" />
             <item value="-113" />
@@ -2106,6 +2144,13 @@
     </carrier_config>
     <carrier_config mcc="460" mnc="08">
         <boolean name="use_only_rsrp_for_lte_signal_bar_bool" value="true" />
+        <!-- Align NR with this carrier's stock LTE scale (LineageOS 512834). -->
+        <int-array name="5g_nr_ssrsrp_thresholds_int_array" num="4">
+            <item value="-120" />
+            <item value="-113" />
+            <item value="-105" />
+            <item value="-97" />
+        </int-array>
         <int-array name="lte_rsrp_thresholds_int_array" num="4">
             <item value="-120" />
             <item value="-113" />
@@ -2182,6 +2227,13 @@
     <carrier_config mcc="460" mnc="09">
         <int name="eutran_rsrp_hysteresis_db_int" value="1" />
         <boolean name="use_only_rsrp_for_lte_signal_bar_bool" value="true" />
+        <!-- Align NR with this carrier's stock LTE scale (LineageOS 512834). -->
+        <int-array name="5g_nr_ssrsrp_thresholds_int_array" num="4">
+            <item value="-120" />
+            <item value="-118" />
+            <item value="-114" />
+            <item value="-105" />
+        </int-array>
         <int-array name="lte_rsrp_thresholds_int_array" num="4">
             <item value="-120" />
             <item value="-118" />
@@ -2346,6 +2398,13 @@
     </carrier_config>
     <carrier_config mcc="460" mnc="13">
         <boolean name="use_only_rsrp_for_lte_signal_bar_bool" value="true" />
+        <!-- Align NR with this carrier's stock LTE scale (LineageOS 512834). -->
+        <int-array name="5g_nr_ssrsrp_thresholds_int_array" num="4">
+            <item value="-120" />
+            <item value="-113" />
+            <item value="-105" />
+            <item value="-97" />
+        </int-array>
         <int-array name="lte_rsrp_thresholds_int_array" num="4">
             <item value="-120" />
             <item value="-113" />
