@@ -31,6 +31,9 @@ AW8697（`haptic_hv`）驱动，不能用另一个 `qcom-hv-haptics` 输入设�
 - [LineageOS 513314](https://review.lineageos.org/c/LineageOS/android_hardware_lineage_interfaces/+/513314)，
   merged：没有实际完成通知时不应声明 callback 能力。本服务继续只报告已实现的
   amplitude control，完成由 framework 和 HAL 停止保护处理。
+- [Oplus 强度处理](https://github.com/LineageOS/android_hardware_oplus/blob/e1d08a1858071bda70547ea2cff39e6a4ae0b0b9/aidl/vibrator/Vibrator.cpp#L307)
+  的输入 FF 通路按 LIGHT/MEDIUM/STRONG 选择约 1/2、3/4、1 的相对幅度。
+  本机只参考这组三档比例，使用自己的 128 基准；不复制其他硬件的寄存器或电压。
 - Gerrit 506310/506312 的 `haptic_hv` 波形长度和效果映射改动尚为 NEW，
   仅用来交叉核对问题，不作为已合入或已在 M2381 验证的实现。
 
@@ -42,7 +45,7 @@ AW8697（`haptic_hv`）驱动，不能用另一个 `qcom-hv-haptics` 输入设�
 波形表从文件偏移 5 开始，每项为大端起止地址（闭区间）。共有 20 项。
 本机 PWMDBG `0x2e` 的采样率位为 `0x40`，即 24 kHz。
 
-| AIDL 效果 | RAM 编号（十进制） | 样本数 | 自然播放时长 | 预设增益 |
+| AIDL 效果 | RAM 编号（十进制） | 样本数 | 自然播放时长 | STRONG 增益 |
 | --- | --- | --- | --- | --- |
 | TEXTURE_TICK | 8 | 139 | 5.79 ms | 128 |
 | TICK | 11 | 231 | 9.63 ms | 128 |
@@ -53,11 +56,13 @@ AW8697（`haptic_hv`）驱动，不能用另一个 `qcom-hv-haptics` 输入设�
 或校准数据。TICK/CLICK/HEAVY_CLICK
 依据本机 Flyme 12.7 的效果 21000/31008/30900 及驱动映射选择 RAM 11/13/3，
 替代第一轮的 12/17/16。标准 DRAG_START 通过 HEAVY_CLICK 使用 RAM 3。
-TEXTURE_TICK 沿用 RAM 8。预设效果统一使用原厂驱动的 0x80 基准增益，取消此前
-8/32/48/96 和 LIGHT/MEDIUM 40%/65% 的额外衰减。Flyme 的普通预设通路只传
-effect ID，不消费 PrebakedSegment 的 strength，因此三个合法强度值在本实现
-使用相同增益；框架的强度档位不会进一步降低这些预设的增益。时间/幅度接口仍可
-调节力度，setAmplitude 的 1.0 对应 128、0.25 对应 32，按 MzVibrateThread 的
+TEXTURE_TICK 沿用 RAM 8。STRONG 使用原厂驱动的 0x80 基准增益，取消此前
+8/32/48/96 的每效果额外衰减。Android 系统仍通过 effect strength 表达用户档位，
+必须在 HAL 落实：LIGHT/MEDIUM/STRONG 分别使用 64/96/128，关闭由 framework
+拦截。1/2、3/4、1 的相对比例参考 LineageOS Oplus 输入 FF 通路的强度等级；
+这是保留 Android 调节能力的设备适配，不是声称 Flyme 本身有此三档 RAM 增益。
+第三轮曾照搬 Flyme 仅传 ID 的策略使三档全部 128，已修正该兼容性问题。
+时间/幅度接口仍可调节力度，setAmplitude 的 1.0 对应 128、0.25 对应 32，按 MzVibrateThread 的
 amplitude * 128 后转整数的比例处理（向零截断，合法正幅度最低保留 1）；on()
 和启动默认增益也恢复 128。
 原厂 on_off 可继承先前增益，原厂 enable 的默认及停止入口设置 128；本服务在每次

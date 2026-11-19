@@ -97,6 +97,7 @@ int main() {
     };
     const EffectStrength strengths[] = {EffectStrength::LIGHT, EffectStrength::MEDIUM,
                                          EffectStrength::STRONG};
+    const int expectedGains[] = {64, 96, 128};
     for (const auto& profile : profiles) {
         for (int s = 0; s < 3; ++s) {
             const std::string label = std::string(profile.name) + " strength " + std::to_string(s);
@@ -107,7 +108,7 @@ int main() {
             // After driver setup, the programmed sequence must be stable even
             // if the chip has already completed its naturally finite pulse.
             std::this_thread::sleep_for(15ms);
-            check(gain() == 128, label + " uses stock preset gain in chip register");
+            check(gain() == expectedGains[s], label + " scales stock baseline in chip register");
             check(sequence() == profile.waveform, label + " selects correct RAM entry");
             check(read("loop").find("seq1 loop: 0x00") != std::string::npos,
                   label + " does not loop");

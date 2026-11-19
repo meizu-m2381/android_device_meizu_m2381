@@ -79,12 +79,13 @@ class Vibrator final : public BnVibrator {
             case Effect::HEAVY_CLICK: waveform = 3; break;
             default: return unsupported();
         }
+        // Keep Flyme's baseline at STRONG while honoring Android's user
+        // intensity setting. Its framework sends the level through strength.
+        int32_t gain;
         switch (strength) {
-            // Flyme's ordinary prebaked path forwards the effect ID only;
-            // it does not apply the Android strength to the motor gain.
-            case EffectStrength::LIGHT:
-            case EffectStrength::MEDIUM:
-            case EffectStrength::STRONG: break;
+            case EffectStrength::LIGHT: gain = kDefaultGain / 2; break;
+            case EffectStrength::MEDIUM: gain = kDefaultGain * 3 / 4; break;
+            case EffectStrength::STRONG: gain = kDefaultGain; break;
             default: return unsupported();
         }
         std::lock_guard<std::mutex> lock(mutex_);
@@ -92,7 +93,7 @@ class Vibrator final : public BnVibrator {
         // value is a completion budget, NOT a pulse length: the chip plays
         // the complete 6/10/16 ms waveform, including its tail, and stops itself.
         // Allow for the driver's asynchronous I2C setup before framework off().
-        auto status = startLocked(kEffectCompletionMs, kDefaultGain, waveform);
+        auto status = startLocked(kEffectCompletionMs, gain, waveform);
         if (status.isOk()) *durationMs = kEffectCompletionMs;
         return status;
     }
