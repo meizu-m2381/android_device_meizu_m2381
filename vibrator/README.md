@@ -45,13 +45,17 @@ AW8697（`haptic_hv`）驱动，不能用另一个 `qcom-hv-haptics` 输入设�
 | AIDL 效果 | RAM 编号（十进制） | 样本数 | 自然播放时长 | STRONG 增益 |
 | --- | --- | --- | --- | --- |
 | TEXTURE_TICK | 8 | 139 | 5.79 ms | 8 |
-| TICK | 12 | 231 | 9.63 ms | 32 |
-| CLICK | 17 | 232 | 9.67 ms | 48 |
-| HEAVY_CLICK | 16 | 232 | 9.67 ms | 96 |
+| TICK | 11 | 231 | 9.63 ms | 32 |
+| CLICK | 13 | 231 | 9.63 ms | 48 |
+| HEAVY_CLICK | 3 | 374 | 15.58 ms | 96 |
 
 这些是实际短脉冲，不是空白占位项；结尾样本收敛至 0。LIGHT/MEDIUM 使用
-40%/65% 增益；不改升压电压、保护寄存器或校准数据。编号是本机选择，
-不是声称复现 Flyme 场景映射；最终力度、清脆度仍需用户握持对比。
+40%/65% 增益；不改升压电压、保护寄存器或校准数据。TICK/CLICK/HEAVY_CLICK
+依据本机 Flyme 12.7 的效果 21000/31008/30900 及驱动映射选择 RAM 11/13/3，
+替代第一轮的 12/17/16。标准 DRAG_START 通过 HEAVY_CLICK 使用 RAM 3。
+TEXTURE_TICK 沿用 RAM 8；增益仍使用此前的设备调校值，播放仍走 waveform/enable，
+不是移植 Flyme 的 GPIO on_off 完整通路，因此不能宣称强度和手感完全相同。
+原厂证据详见 manifest 仓 `docs/flyme-haptics.md`；最终触感需用户握持对比。
 
 - `waveform` 用 `%x` 解析，必须写 `0x11` 表示十进制 17；写 `17` 会选到
   0x17，超出固件范围。每次播放前先停止上一次内核 work，再显式选择波形。

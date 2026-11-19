@@ -72,9 +72,11 @@ class Vibrator final : public BnVibrator {
         int32_t waveform, gain;
         switch (effect) {
             case Effect::TEXTURE_TICK: waveform = 8; gain = 8; break;
-            case Effect::TICK: waveform = 12; gain = 32; break;
-            case Effect::CLICK: waveform = 17; gain = 48; break;
-            case Effect::HEAVY_CLICK: waveform = 16; gain = 96; break;
+            // Flyme maps TICK/CLICK/HEAVY_CLICK to vendor effects
+            // 21000/31008/30900, selecting RAM 11/13/3 in haptic_hv.
+            case Effect::TICK: waveform = 11; gain = 32; break;
+            case Effect::CLICK: waveform = 13; gain = 48; break;
+            case Effect::HEAVY_CLICK: waveform = 3; gain = 96; break;
             default: return unsupported();
         }
         switch (strength) {
@@ -86,7 +88,7 @@ class Vibrator final : public BnVibrator {
         std::lock_guard<std::mutex> lock(mutex_);
         // <= 50 ms selects a single RAM playback for these waveforms. This
         // value is a completion budget, NOT a pulse length: the chip plays
-        // the complete 6/10 ms waveform, including its tail, and stops itself.
+        // the complete 6/10/16 ms waveform, including its tail, and stops itself.
         // Allow for the driver's asynchronous I2C setup before framework off().
         auto status = startLocked(kEffectCompletionMs, gain, waveform);
         if (status.isOk()) *durationMs = kEffectCompletionMs;

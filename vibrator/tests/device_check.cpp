@@ -84,13 +84,13 @@ int main() {
         int waveform;
         int strongGain;
     };
-    // Independent hardware expectations: decimal 12/16/17 must NOT become
-    // hexadecimal 0x12/0x16/0x17, and all short effects must disable looping.
+    // Flyme's vendor effects 21000/31008/30900 select RAM 11/13/3.
+    // Decimal wave numbers must not become hex, and short effects must not loop.
     const Profile profiles[] = {
             {Effect::TEXTURE_TICK, "texture", 8, 8},
-            {Effect::TICK, "tick", 12, 32},
-            {Effect::CLICK, "click", 17, 48},
-            {Effect::HEAVY_CLICK, "heavy", 16, 96},
+            {Effect::TICK, "tick", 11, 32},
+            {Effect::CLICK, "click", 13, 48},
+            {Effect::HEAVY_CLICK, "heavy", 3, 96},
     };
     const EffectStrength strengths[] = {EffectStrength::LIGHT, EffectStrength::MEDIUM,
                                          EffectStrength::STRONG};
@@ -129,7 +129,7 @@ int main() {
     check(vibrator->perform(Effect::CLICK, EffectStrength::STRONG, nullptr, &duration).isOk(),
           "click interrupts continuous vibration");
     std::this_thread::sleep_for(15ms);
-    check(sequence() == 17 && read("loop").find("seq1 loop: 0x00") != std::string::npos,
+    check(sequence() == 13 && read("loop").find("seq1 loop: 0x00") != std::string::npos,
           "interruption replaces waveform and removes infinite loop");
     std::this_thread::sleep_for(60ms);
     check(idle(), "interrupted playback stops");

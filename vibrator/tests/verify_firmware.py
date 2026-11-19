@@ -18,7 +18,7 @@ def main():
     count = (first - base - 1) // 4
     if count != 20:
         raise ValueError(f"Unexpected RAM wave count {count}")
-    for index, expected_samples in ((8, 139), (12, 231), (17, 232), (16, 232)):
+    for index, expected_samples in ((8, 139), (11, 231), (13, 231), (3, 374)):
         start, end = struct.unpack_from(">HH", data, 5 + (index - 1) * 4)
         offset = 4 + start - base
         size = end - start + 1
