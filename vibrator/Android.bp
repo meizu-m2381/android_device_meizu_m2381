@@ -13,3 +13,16 @@ cc_binary {
     ],
     cflags: ["-Wall", "-Wextra", "-Werror"],
 }
+
+// Build explicitly and run as root from /data/local/tmp; not shipped in ROMs.
+cc_binary {
+    name: "m2381-vibrator-check",
+    vendor: true,
+    srcs: ["tests/device_check.cpp"],
+    shared_libs: [
+        "libbase",
+        "libbinder_ndk",
+        "android.hardware.vibrator-V2-ndk",
+    ],
+    cflags: ["-Wall", "-Wextra", "-Werror"],
+}

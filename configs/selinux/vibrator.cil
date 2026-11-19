@@ -1,4 +1,4 @@
 ; 原厂 API 33 CIL 保持马达节点 vib_strength_sysfs 标签。
-; 源码 AIDL HAL 写入 on/off 和 gain；不扩大其他域的权限。
+; 源码 AIDL HAL 写入启停、gain 和 waveform；不扩大其他域的权限。
 (allow hal_vibrator_default vib_strength_sysfs (file (open write getattr)))
 (allow hal_vibrator_default vib_strength_sysfs (dir (search)))

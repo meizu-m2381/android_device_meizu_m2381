@@ -16,7 +16,8 @@
 namespace aidl::android::hardware::vibrator {
 
 // m2381 has an Awinic I2C motor, independent of the QCOM haptics device.
-// timed_output controls duration; gain controls amplitude independently.
+// Meizu's waveform/enable interface plays the stock RAM effects. The firmware
+// and this driver's sysfs ABI are documented in README.md beside this source.
 // Composition and calibrated frequency control are not implemented.
 class Vibrator final : public BnVibrator {
   public:
@@ -36,17 +37,21 @@ class Vibrator final : public BnVibrator {
     }
     ndk::ScopedAStatus off() override {
         std::lock_guard<std::mutex> lock(mutex_);
+        auto result = writeDuration(0);
+        if (!result.isOk()) return result;
         active_ = false;
         ++generation_;
         changed_.notify_all();
-        return writeDuration(0);
+        return result;
     }
     ndk::ScopedAStatus on(int32_t timeoutMs,
                          const std::shared_ptr<IVibratorCallback>& callback) override {
         if (timeoutMs <= 0) return ndk::ScopedAStatus::fromExceptionCode(EX_ILLEGAL_ARGUMENT);
         if (callback) return unsupported();
         std::lock_guard<std::mutex> lock(mutex_);
-        return startLocked(timeoutMs, kDefaultGain);
+        // Reset the waveform after perform(): otherwise a notification can
+        // inherit the preceding click's waveform (and vice versa).
+        return startLocked(timeoutMs, kDefaultGain, kTimedWaveform);
     }
     ndk::ScopedAStatus getSupportedEffects(std::vector<Effect>* result) override {
         *result = {Effect::CLICK, Effect::TICK, Effect::HEAVY_CLICK, Effect::TEXTURE_TICK};
@@ -64,12 +69,12 @@ class Vibrator final : public BnVibrator {
                              const std::shared_ptr<IVibratorCallback>& callback,
                              int32_t* durationMs) override {
         if (callback) return unsupported();
-        int32_t duration, gain;
+        int32_t waveform, gain;
         switch (effect) {
-            case Effect::TEXTURE_TICK: duration = 8; gain = 15; break;
-            case Effect::TICK: duration = 12; gain = 24; break;
-            case Effect::CLICK: duration = 18; gain = 48; break;
-            case Effect::HEAVY_CLICK: duration = 30; gain = 96; break;
+            case Effect::TEXTURE_TICK: waveform = 8; gain = 8; break;
+            case Effect::TICK: waveform = 12; gain = 32; break;
+            case Effect::CLICK: waveform = 17; gain = 48; break;
+            case Effect::HEAVY_CLICK: waveform = 16; gain = 96; break;
             default: return unsupported();
         }
         switch (strength) {
@@ -79,8 +84,12 @@ class Vibrator final : public BnVibrator {
             default: return unsupported();
         }
         std::lock_guard<std::mutex> lock(mutex_);
-        auto status = startLocked(duration, gain);
-        if (status.isOk()) *durationMs = duration;
+        // <= 50 ms selects a single RAM playback for these waveforms. This
+        // value is a completion budget, NOT a pulse length: the chip plays
+        // the complete 6/10 ms waveform, including its tail, and stops itself.
+        // Allow for the driver's asynchronous I2C setup before framework off().
+        auto status = startLocked(kEffectCompletionMs, gain, waveform);
+        if (status.isOk()) *durationMs = kEffectCompletionMs;
         return status;
     }
     ndk::ScopedAStatus setAmplitude(float amplitude) override {
@@ -129,14 +138,26 @@ class Vibrator final : public BnVibrator {
     // Keep the default at half the ceiling and scale effects within it.
     static constexpr int32_t kMaxGain = 0x60;
     static constexpr int32_t kDefaultGain = 0x30;
+    static constexpr int32_t kTimedWaveform = 1;
+    static constexpr int32_t kEffectCompletionMs = 30;
     static ndk::ScopedAStatus unsupported() {
         return ndk::ScopedAStatus::fromExceptionCode(EX_UNSUPPORTED_OPERATION);
     }
-    ndk::ScopedAStatus startLocked(int32_t timeoutMs, int32_t gain) {
+    ndk::ScopedAStatus startLocked(int32_t timeoutMs, int32_t gain, int32_t waveform) {
+        // Stop/cancel the preceding kernel work before changing its waveform.
+        // In particular, do not leave the infinite loop from a long on() in
+        // effect when a short UI effect is requested next.
+        auto result = writeDuration(0);
+        if (!result.isOk()) return result;
+        active_ = false;
+        ++generation_;
+        changed_.notify_all();
+        result = writeWaveform(waveform);
+        if (!result.isOk()) return result;
         // The stock driver's enable_store resets gain to 0x80 unless the
         // decimal gain is supplied as its second argument. A prior gain_store
         // only changes the hardware register and is overwritten at playback.
-        auto result = writeDuration(timeoutMs, gain);
+        result = writeDuration(timeoutMs, gain);
         if (!result.isOk()) {
             active_ = false;
             ++generation_;
@@ -149,6 +170,18 @@ class Vibrator final : public BnVibrator {
         active_ = true;
         ++generation_;
         changed_.notify_all();
+        return ndk::ScopedAStatus::ok();
+    }
+    ndk::ScopedAStatus writeWaveform(int32_t waveform) {
+        char value[16];
+        // waveform_store uses "%x". Decimal-looking "17" selects 0x17,
+        // which is outside the 20-entry firmware, NOT waveform 17.
+        std::snprintf(value, sizeof(value), "0x%x", waveform);
+        if (!::android::base::WriteStringToFile(value,
+                                               "/sys/class/timed_output/vibrator/waveform")) {
+            PLOG(ERROR) << "Cannot select Awinic waveform";
+            return ndk::ScopedAStatus::fromExceptionCode(EX_ILLEGAL_STATE);
+        }
         return ndk::ScopedAStatus::ok();
     }
     ndk::ScopedAStatus writeGain(int32_t gain) {
