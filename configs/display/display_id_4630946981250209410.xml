@@ -125,7 +125,7 @@
             <nits>780</nits>
         </point>
     </screenBrightnessMap>
-    <autoBrightness>
+    <autoBrightness enabled="true">
         <brighteningLightDebounceMillis>500</brighteningLightDebounceMillis>
         <darkeningLightDebounceMillis>1500</darkeningLightDebounceMillis>
     </autoBrightness>
