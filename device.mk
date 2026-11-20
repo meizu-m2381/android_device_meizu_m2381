@@ -220,6 +220,7 @@ PRODUCT_PACKAGES += \
 
 # Gesture
 PRODUCT_PACKAGES += \
+    sensors.m2381 \
     mz_fp_gesture_init
 
 # Graphics
