@@ -6,6 +6,8 @@
 #include <android/gui/BnRegionSamplingListener.h>
 #include <android/gui/BnScreenCaptureListener.h>
 #include <android/hidl/base/1.0/IBase.h>
+#include <android/os/IPowerManager.h>
+#include <binder/IServiceManager.h>
 #include <binder/ProcessState.h>
 #include <gui/SurfaceComposerClient.h>
 #include <hidl/HidlBinderSupport.h>
@@ -173,6 +175,20 @@ std::optional<uint32_t> capture(const sp<IBinder>& display, const Rect& region) 
 }
 
 bool displayOn() {
+    // AOD can leave DRM DPMS at "On". Gate sampling on Android's interactive
+    // state as well, so an always-on panel does not keep the sampler active.
+    static sp<os::IPowerManager> powerManager;
+    if (!powerManager) {
+        powerManager = interface_cast<os::IPowerManager>(
+                defaultServiceManager()->checkService(String16("power")));
+    }
+    bool interactive = false;
+    if (!powerManager) return false;
+    if (!powerManager->isInteractive(&interactive).isOk()) {
+        powerManager.clear();
+        return false;
+    }
+    if (!interactive) return false;
     std::string power;
     return base::ReadFileToString(kPower, &power) && base::Trim(power) == "On";
 }

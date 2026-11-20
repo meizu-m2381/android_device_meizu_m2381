@@ -10,6 +10,7 @@ cc_binary {
         "libgui",
         "libhidlbase",
         "liblog",
+        "libpowermanager",
         "libui",
         "libutils",
     ],

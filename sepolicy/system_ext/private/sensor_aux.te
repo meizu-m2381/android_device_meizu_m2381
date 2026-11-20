@@ -8,7 +8,9 @@ binder_use(m2381_sensor_aux)
 hwbinder_use(m2381_sensor_aux)
 binder_call(m2381_sensor_aux, surfaceflinger)
 binder_call(surfaceflinger, m2381_sensor_aux)
+binder_call(m2381_sensor_aux, system_server)
 allow m2381_sensor_aux surfaceflinger_service:service_manager find;
+allow m2381_sensor_aux power_service:service_manager find;
 allow m2381_sensor_aux surfaceflinger:fd use;
 allow m2381_sensor_aux gpu_device:chr_file rw_file_perms;
 allow m2381_sensor_aux graphics_device:chr_file rw_file_perms;
