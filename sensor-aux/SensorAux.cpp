@@ -15,9 +15,11 @@
 #include <hwbinder/Parcel.h>
 #include <log/log.h>
 #include <ui/GraphicBuffer.h>
+#include <ui/DisplayState.h>
 
 #include <atomic>
 #include <chrono>
+#include <cmath>
 #include <csignal>
 #include <future>
 #include <optional>
@@ -93,13 +95,44 @@ public:
     std::promise<gui::ScreenCaptureResults> promise;
 };
 
-std::optional<uint32_t> capture(const sp<IBinder>& display) {
+std::optional<Rect> samplingRegion(const sp<IBinder>& display) {
+    ui::DisplayState state;
+    if (SurfaceComposerClient::getDisplayState(display, &state) != OK) return std::nullopt;
+    Rect region = kRegion;
+    int width = 1080, height = 2400;
+    switch (state.orientation) {
+        case ui::ROTATION_0: break;
+        case ui::ROTATION_90:
+            region = Rect(kRegion.top, 1080 - kRegion.right, kRegion.bottom, 1080 - kRegion.left);
+            width = 2400; height = 1080;
+            break;
+        case ui::ROTATION_180:
+            region = Rect(1080 - kRegion.right, 2400 - kRegion.bottom,
+                          1080 - kRegion.left, 2400 - kRegion.top);
+            break;
+        case ui::ROTATION_270:
+            region = Rect(2400 - kRegion.bottom, kRegion.left,
+                          2400 - kRegion.top, kRegion.right);
+            width = 2400; height = 1080;
+            break;
+    }
+    // SurfaceFlinger capture crops in logical layer-stack coordinates, while
+    // the sensor stays at one physical panel position, including with wm size.
+    const float sx = static_cast<float>(state.layerStackSpaceRect.width) / width;
+    const float sy = static_cast<float>(state.layerStackSpaceRect.height) / height;
+    region = Rect(std::floor(region.left * sx), std::floor(region.top * sy),
+                  std::ceil(region.right * sx), std::ceil(region.bottom * sy));
+    if (region.isEmpty()) return std::nullopt;
+    return region;
+}
+
+std::optional<uint32_t> capture(const sp<IBinder>& display, const Rect& region) {
     gui::DisplayCaptureArgs args;
     args.displayToken = display;
-    args.captureArgs.sourceCrop.left = kRegion.left;
-    args.captureArgs.sourceCrop.top = kRegion.top;
-    args.captureArgs.sourceCrop.right = kRegion.right;
-    args.captureArgs.sourceCrop.bottom = kRegion.bottom;
+    args.captureArgs.sourceCrop.left = region.left;
+    args.captureArgs.sourceCrop.top = region.top;
+    args.captureArgs.sourceCrop.right = region.right;
+    args.captureArgs.sourceCrop.bottom = region.bottom;
     args.width = kRegion.getWidth();
     args.height = kRegion.getHeight();
     args.captureArgs.dataspace = static_cast<int32_t>(ui::Dataspace::V0_SRGB);
@@ -161,6 +194,7 @@ int main() {
     SensorAux aux;
     auto listener = sp<RegionListener>::make();
     sp<IBinder> display;
+    Rect activeRegion;
     bool connected = false, enabled = false, registered = false;
     int lastBrightness = -1;
     auto lastCapture = std::chrono::steady_clock::now() - 10s;
@@ -195,10 +229,21 @@ int main() {
                 continue;
             }
         }
+        const auto region = samplingRegion(display);
+        if (!region) {
+            display.clear();
+            std::this_thread::sleep_for(1s);
+            continue;
+        }
+        if (registered && activeRegion != *region) {
+            SurfaceComposerClient::removeRegionSamplingListener(listener);
+            registered = false;
+        }
         if (!registered) {
-            registered = SurfaceComposerClient::addRegionSamplingListener(kRegion, nullptr,
+            registered = SurfaceComposerClient::addRegionSamplingListener(*region, nullptr,
                                                                           listener) == OK;
             if (!registered) return 1;
+            activeRegion = *region;
             listener->dirty.store(true);
         }
         if (!enabled) {
@@ -212,7 +257,7 @@ int main() {
         const bool changed = listener->dirty.exchange(false) || currentBrightness != lastBrightness;
         // Rare fallback also recovers a lost composer listener after SF restarts.
         if (changed || cycle - lastCapture > 5s) {
-            const auto rgb = capture(display);
+            const auto rgb = capture(display, *region);
             if (!rgb) {
                 ALOGW("Region capture unavailable; reconnecting compositor");
                 aux.control(false);
