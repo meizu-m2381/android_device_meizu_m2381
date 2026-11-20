@@ -1,0 +1,6 @@
+# SPDX-License-Identifier: Apache-2.0
+hal_attribute(meizu_sensor_aux)
+type hal_meizu_sensor_aux_hwservice, hwservice_manager_type, protected_hwservice;
+hal_attribute_hwservice(hal_meizu_sensor_aux, hal_meizu_sensor_aux_hwservice)
+binder_call(hal_meizu_sensor_aux_client, hal_meizu_sensor_aux_server)
+type sysfs_m2381_display, fs_type, sysfs_type;

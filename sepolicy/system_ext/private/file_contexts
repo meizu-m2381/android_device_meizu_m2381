@@ -1,0 +1,2 @@
+# SPDX-License-Identifier: Apache-2.0
+/system_ext/bin/m2381-sensor-aux u:object_r:m2381_sensor_aux_exec:s0

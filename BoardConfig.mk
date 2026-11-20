@@ -225,6 +225,8 @@ ENABLE_VENDOR_RIL_SERVICE := true
 QCOM_SEPOLICY_PATH := $(firstword $(wildcard device/qcom/sepolicy_vndr/sm8550) device/qcom/sepolicy_vndr)
 include $(QCOM_SEPOLICY_PATH)/SEPolicy.mk
 BOARD_VENDOR_SEPOLICY_DIRS += $(DEVICE_PATH)/sepolicy/vendor
+SYSTEM_EXT_PUBLIC_SEPOLICY_DIRS += $(DEVICE_PATH)/sepolicy/system_ext/public
+SYSTEM_EXT_PRIVATE_SEPOLICY_DIRS += $(DEVICE_PATH)/sepolicy/system_ext/private
 
 # System properties
 TARGET_ODM_PROP += $(DEVICE_PATH)/configs/properties/odm.prop

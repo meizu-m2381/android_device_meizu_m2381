@@ -1,0 +1,14 @@
+# SPDX-License-Identifier: Apache-2.0
+type hal_meizu_sensor_aux_default, domain;
+type hal_meizu_sensor_aux_default_exec, exec_type, vendor_file_type, file_type;
+init_daemon_domain(hal_meizu_sensor_aux_default)
+hal_server_domain(hal_meizu_sensor_aux_default, hal_meizu_sensor_aux)
+hwbinder_use(hal_meizu_sensor_aux_default)
+# Stock libssc communicates with the sensors HAL's SSC proxy.
+binder_call(hal_meizu_sensor_aux_default, hal_sensors_default)
+binder_call(hal_sensors_default, hal_meizu_sensor_aux_default)
+allow hal_meizu_sensor_aux_default hal_sensors_hwservice:hwservice_manager find;
+allow hal_meizu_sensor_aux_default sysfs_type:dir search;
+allow hal_meizu_sensor_aux_default sysfs_m2381_display:file r_file_perms;
+get_prop(hal_meizu_sensor_aux_default, surfaceflinger_color_prop)
+allow hal_meizu_sensor_aux_default vendor_hal_sensorscalibrate_qti_hwservice:hwservice_manager find;

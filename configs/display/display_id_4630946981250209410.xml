@@ -125,4 +125,13 @@
             <nits>780</nits>
         </point>
     </screenBrightnessMap>
+    <autoBrightness>
+        <brighteningLightDebounceMillis>500</brighteningLightDebounceMillis>
+        <darkeningLightDebounceMillis>1500</darkeningLightDebounceMillis>
+    </autoBrightness>
+    <!-- Bound the visible ramp separately from ambient-light filtering. -->
+    <screenBrightnessRampIncreaseMaxMillis>1500</screenBrightnessRampIncreaseMaxMillis>
+    <screenBrightnessRampDecreaseMaxMillis>3000</screenBrightnessRampDecreaseMaxMillis>
+    <ambientLightHorizonLong>3000</ambientLightHorizonLong>
+    <ambientLightHorizonShort>500</ambientLightHorizonShort>
 </displayConfiguration>

@@ -79,6 +79,9 @@ PRODUCT_PACKAGES += \
     checkpoint_gc
 
 # Graphics
+# Feed the stock under-display ALS compensation service with panel-region RGB.
+PRODUCT_PACKAGES += m2381-sensor-aux
+
 # Keep both Adreno lookup paths on one driver instance.
 PRODUCT_PACKAGES += \
     m2381_adreno_egl_alias_32 \

@@ -1,0 +1,9 @@
+service m2381-sensor-aux /system_ext/bin/m2381-sensor-aux
+    class late_start
+    user system
+    group graphics system
+    disabled
+    restart_period 5
+
+on property:sys.boot_completed=1
+    start m2381-sensor-aux

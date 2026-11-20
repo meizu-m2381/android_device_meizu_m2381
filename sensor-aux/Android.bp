@@ -1,0 +1,17 @@
+// SPDX-License-Identifier: Apache-2.0
+cc_binary {
+    name: "m2381-sensor-aux",
+    system_ext_specific: true,
+    srcs: ["SensorAux.cpp"],
+    init_rc: ["m2381-sensor-aux.rc"],
+    shared_libs: [
+        "libbase",
+        "libbinder",
+        "libgui",
+        "libhidlbase",
+        "liblog",
+        "libui",
+        "libutils",
+    ],
+    cflags: ["-Wall", "-Wextra", "-Werror"],
+}

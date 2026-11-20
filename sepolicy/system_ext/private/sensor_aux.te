@@ -1,0 +1,16 @@
+# SPDX-License-Identifier: Apache-2.0
+type m2381_sensor_aux, domain, coredomain;
+type m2381_sensor_aux_exec, exec_type, system_file_type, file_type;
+init_daemon_domain(m2381_sensor_aux)
+hal_client_domain(m2381_sensor_aux, hal_meizu_sensor_aux)
+binder_use(m2381_sensor_aux)
+hwbinder_use(m2381_sensor_aux)
+binder_call(m2381_sensor_aux, surfaceflinger)
+binder_call(surfaceflinger, m2381_sensor_aux)
+allow m2381_sensor_aux surfaceflinger_service:service_manager find;
+allow m2381_sensor_aux surfaceflinger:fd use;
+allow m2381_sensor_aux gpu_device:chr_file rw_file_perms;
+allow m2381_sensor_aux graphics_device:chr_file rw_file_perms;
+allow m2381_sensor_aux sysfs:dir r_dir_perms;
+allow m2381_sensor_aux sysfs_type:dir search;
+allow m2381_sensor_aux sysfs_m2381_display:file r_file_perms;
