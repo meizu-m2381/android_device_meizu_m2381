@@ -6,6 +6,8 @@
 #include <time.h>
 
 #include <condition_variable>
+#include <algorithm>
+#include <cmath>
 #include <deque>
 #include <map>
 #include <mutex>
@@ -61,6 +63,11 @@ public:
             for (const auto& info : infos) {
                 list_.push_back(info);
                 flags_[info.sensorHandle] = info.flags;
+                if (info.type == SensorType::PROXIMITY && (info.flags & 1) &&
+                    std::isfinite(info.maxRange) && info.maxRange > 0) {
+                    proximity_ = info.sensorHandle;
+                    farDistance_ = info.maxRange;
+                }
                 if (static_cast<int32_t>(info.type) == kRaiseType &&
                     info.typeAsString == "com.meizu.sensor.raise" && (info.flags & 1)) {
                     raise_ = info.sensorHandle;
@@ -68,7 +75,7 @@ public:
             }
         });
         bool collision = flags_.count(kPickup) != 0;
-        if (raise_ >= 0 && !collision) {
+        if (raise_ >= 0 && proximity_ >= 0 && !collision) {
             for (const auto& info : list_) {
                 if (info.sensorHandle != raise_) continue;
                 SensorInfo pickup = info;
@@ -88,7 +95,8 @@ public:
                 break;
             }
         }
-        ALOGI("Stock raise handle=%d; standard pickup available=%d", raise_, available_);
+        ALOGI("Stock raise=%d proximity=%d; standard pickup available=%d",
+              raise_, proximity_, available_);
         worker_ = std::thread([this] { dispatch(); });
     }
     ~Pickup() override {
@@ -110,6 +118,10 @@ public:
             std::lock_guard lock(mutex_);
             callback_ = callback;
             armed_ = privateEnabled_ = false;
+            proximityEnabled_ = proximityKnown_ = false;
+            proximityActive_ = false;
+            proximityPeriod_ = 200000000;
+            proximityLatency_ = 0;
             ++generation_;
             lastAction_ = -1;
             pending_.clear();
@@ -117,6 +129,26 @@ public:
         return stock_->initialize(sp<Callback>::make(this));
     }
     Return<Result> activate(int32_t handle, bool enabled) override {
+        if (handle == proximity_) {
+            std::lock_guard control(control_);
+            // An internal pickup subscription must not be disabled by a client
+            // releasing its normal proximity subscription (and vice versa).
+            auto result = syncProximity(armed_, enabled, proximityPeriod_, proximityLatency_);
+            if (result.isOk() && result == Result::OK) {
+                std::lock_guard lock(mutex_);
+                bool first = enabled && !proximityEnabled_;
+                proximityEnabled_ = enabled;
+                if (first) {
+                    // The stock sensor may already be active for pickup. An
+                    // on-change client still needs its initial current value.
+                    // Resolve it on the worker after any queued real samples.
+                    pending_.push_back({{}, callback_->createScopedWakelock(true),
+                                        generation_, true});
+                    condition_.notify_one();
+                }
+            }
+            return result;
+        }
         if (handle != kPickup && handle != raise_) return stock_->activate(handle, enabled);
         if (handle == kPickup && !available_) return Result::BAD_VALUE;
         std::lock_guard control(control_);
@@ -133,15 +165,41 @@ public:
             }
             desired = armed_ || privateEnabled_;
         }
+        if (handle == kPickup) {
+            auto result = syncProximity(enabled, proximityEnabled_,
+                                        proximityPeriod_, proximityLatency_);
+            if (!result.isOk() || result != Result::OK) {
+                std::lock_guard lock(mutex_);
+                armed_ = oldArmed;
+                ++generation_;
+                return result;
+            }
+        }
         auto result = stock_->activate(raise_, desired);
         if (!result.isOk() || result != Result::OK) {
-            std::lock_guard lock(mutex_);
-            armed_ = oldArmed; privateEnabled_ = oldPrivate;
+            {
+                std::lock_guard lock(mutex_);
+                armed_ = oldArmed; privateEnabled_ = oldPrivate;
+                ++generation_;
+            }
+            if (handle == kPickup) {
+                syncProximity(oldArmed, proximityEnabled_, proximityPeriod_, proximityLatency_);
+            }
         }
         return result;
     }
     Return<Result> batch(int32_t h, int64_t period, int64_t latency) override {
         if (h == kPickup) return stock_->batch(raise_, 200000000, 0);
+        if (h == proximity_) {
+            std::lock_guard control(control_);
+            auto result = stock_->batch(h, armed_ ? std::min(period, INT64_C(200000000)) : period,
+                                        armed_ ? 0 : latency);
+            if (result.isOk() && result == Result::OK) {
+                proximityPeriod_ = period;
+                proximityLatency_ = latency;
+            }
+            return result;
+        }
         return stock_->batch(h, period, latency);
     }
     Return<Result> flush(int32_t h) override {
@@ -171,10 +229,35 @@ public:
     }
 
 private:
+    // Called with control_, never mutex_: stock callbacks only enqueue events.
+    Return<Result> syncProximity(bool pickup, bool external, int64_t period, int64_t latency) {
+        bool active = pickup || external;
+        if (active) {
+            auto result = stock_->batch(proximity_,
+                    pickup ? (external ? std::min(period, INT64_C(200000000)) : 200000000)
+                           : period,
+                    pickup ? 0 : latency);
+            if (!result.isOk() || result != Result::OK) return result;
+        }
+        if (active != proximityActive_) {
+            // On-change values stay valid while the sensor remains enabled.
+            // Reject queued samples from a previous enable period.
+            int64_t since = nowNs();
+            auto result = stock_->activate(proximity_, active);
+            if (!result.isOk() || result != Result::OK) return result;
+            proximityActive_ = active;
+            std::lock_guard lock(mutex_);
+            proximityKnown_ = false;
+            proximitySince_ = since;
+            proximityTimestamp_ = since;
+        }
+        return Result::OK;
+    }
     struct Pending {
         std::vector<Event> events;
         ScopedWakelock wakelock;
         uint64_t generation;
+        bool replayProximity = false;
     };
     void dispatch() {
         for (;;) {
@@ -185,14 +268,28 @@ private:
             pending_.pop_front();
             lock.unlock();
             std::vector<Event> output;
-            bool disable = false, wakeup = false;
+            bool triggered = false, disable = false, wakeup = false;
             // Serialize disarming against framework cancellation/rearming, but
             // never call the stock HAL while holding the callback queue lock.
             std::unique_lock control(control_);
             lock.lock();
             auto callback = callback_;
+            if (pending.replayProximity && proximityEnabled_ && proximityKnown_) {
+                output.push_back(proximityEvent_);
+            }
             for (const auto& event : pending.events) {
-                if (event.sensorHandle != raise_) {
+                if (event.sensorHandle == proximity_) {
+                    if (event.sensorType == SensorType::PROXIMITY && proximityActive_ &&
+                        event.timestamp >= proximitySince_ &&
+                        event.timestamp >= proximityTimestamp_) {
+                        proximityKnown_ = std::isfinite(event.u.scalar) && event.u.scalar >= 0;
+                        proximityFar_ = proximityKnown_ && event.u.scalar >= farDistance_;
+                        proximityTimestamp_ = event.timestamp;
+                        proximityEvent_ = event;
+                    }
+                    // Internal samples must not leak to an unsubscribed client.
+                    if (proximityEnabled_) output.push_back(event);
+                } else if (event.sensorHandle != raise_) {
                     output.push_back(event);
                 } else {
                     if (privateEnabled_) output.push_back(event);
@@ -204,6 +301,14 @@ private:
                     lastAction_ = static_cast<int>(value);
                     if (pickup && armed_ && pending.generation == generation_ &&
                         event.timestamp >= armedAt_) {
+                        // SystemUI treats TYPE_PICK_UP_GESTURE as already
+                        // proximity checked. Never emit a covered/unknown lift.
+                        if (!proximityKnown_ || !proximityFar_ ||
+                            proximityTimestamp_ > event.timestamp) {
+                            ALOGI("Suppressed pickup: proximity known=%d far=%d",
+                                  proximityKnown_, proximityFar_);
+                            continue;
+                        }
                         Event translated{};
                         translated.timestamp = event.timestamp;
                         translated.sensorHandle = kPickup;
@@ -211,6 +316,7 @@ private:
                         translated.u.scalar = 1;
                         output.push_back(translated);
                         armed_ = false;
+                        triggered = true;
                         disable = !privateEnabled_;
                     }
                 }
@@ -223,6 +329,13 @@ private:
                     ALOGE("Could not disarm stock raise sensor");
                 }
             }
+            if (triggered) {
+                auto result = syncProximity(false, proximityEnabled_,
+                                            proximityPeriod_, proximityLatency_);
+                if (!result.isOk() || result != Result::OK) {
+                    ALOGE("Could not release pickup proximity subscription");
+                }
+            }
             control.unlock();
             // Retain the vendor wake lock until the replacement batch owns its
             // wake lock. No long-lived wakelock or polling thread is added.
@@ -233,6 +346,13 @@ private:
     }
     ISensorsSubHal* stock_;
     int32_t raise_ = -1;
+    int32_t proximity_ = -1;
+    float farDistance_ = 0;
+    bool proximityEnabled_ = false, proximityActive_ = false;
+    bool proximityKnown_ = false, proximityFar_ = false;
+    int64_t proximitySince_ = 0, proximityTimestamp_ = 0;
+    int64_t proximityPeriod_ = 200000000, proximityLatency_ = 0;
+    Event proximityEvent_{};
     bool available_ = false;
     std::vector<SensorInfo> list_;
     std::map<int32_t, uint32_t> flags_;

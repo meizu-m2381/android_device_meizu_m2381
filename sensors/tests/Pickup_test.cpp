@@ -77,15 +77,22 @@ public:
         SensorInfo raise{}; raise.sensorHandle = 0xa0020;
         raise.type = static_cast<SensorType>(65539);
         raise.typeAsString = "com.meizu.sensor.raise"; raise.flags = 3;
-        cb(hidl_vec<SensorInfo>{accel, raise}); return Void();
+        SensorInfo prox{}; prox.sensorHandle = 0x52; prox.type = SensorType::PROXIMITY;
+        prox.flags = 3; prox.maxRange = 5;
+        cb(hidl_vec<SensorInfo>{accel, raise, prox}); return Void();
     }
     const std::string getName() override { return "test SSC"; }
-    Return<Result> initialize(const sp<IHalProxyCallback>& cb) override { callback = cb; active = false; return Result::OK; }
-    Return<Result> activate(int32_t h, bool enabled) override {
-        lastHandle = h; active = enabled; return Result::OK;
+    Return<Result> initialize(const sp<IHalProxyCallback>& cb) override {
+        callback = cb; enabled.clear(); return Result::OK;
     }
-    Return<Result> batch(int32_t h, int64_t, int64_t latency) override {
-        lastHandle = h; lastLatency = latency; return Result::OK;
+    Return<Result> activate(int32_t h, bool enabled) override {
+        if (h == failActivate) return Result::BAD_VALUE;
+        lastHandle = h; this->enabled[h] = enabled; return Result::OK;
+    }
+    Return<Result> batch(int32_t h, int64_t period, int64_t latency) override {
+        if (h == failBatch) return Result::BAD_VALUE;
+        lastHandle = h; lastLatency = latency;
+        periods[h] = period; latencies[h] = latency; return Result::OK;
     }
     Return<Result> flush(int32_t) override { return Result::OK; }
     Return<Result> injectSensorData_2_1(const Event&) override { return Result::INVALID_OPERATION; }
@@ -106,8 +113,17 @@ public:
         accel.timestamp = marker;
         callback->postEvents({raise, accel}, callback->createScopedWakelock(true));
     }
+    void proximity(float distance, int64_t timestamp, int64_t marker) {
+        Event prox{}; prox.sensorHandle = 0x52; prox.sensorType = SensorType::PROXIMITY;
+        prox.timestamp = timestamp; prox.u.scalar = distance;
+        Event accel{}; accel.sensorHandle = 11; accel.sensorType = SensorType::ACCELEROMETER;
+        accel.timestamp = marker;
+        callback->postEvents({prox, accel}, callback->createScopedWakelock(true));
+    }
     sp<IHalProxyCallback> callback;
-    std::atomic<bool> active{false};
+    std::map<int32_t, bool> enabled;
+    std::map<int32_t, int64_t> periods, latencies;
+    int32_t failActivate = -1, failBatch = -1;
     int32_t lastHandle = 0;
     int64_t lastLatency = -1;
 };
@@ -118,13 +134,21 @@ int main() {
     auto sink = sp<Sink>::make();
     REQUIRE(adapter.initialize(sink) == Result::OK);
     adapter.getSensorsList_2_1([](const auto& list) {
-        REQUIRE(list.size() == 3);
+        REQUIRE(list.size() == 4);
         REQUIRE(list[1].typeAsString == "com.meizu.sensor.raise");
-        REQUIRE(list[2].type == SensorType::PICK_UP_GESTURE && list[2].flags == 5);
-        REQUIRE(list[2].minDelay == -1 && list[2].fifoMaxEventCount == 0);
+        REQUIRE(list[3].type == SensorType::PICK_UP_GESTURE && list[3].flags == 5);
+        REQUIRE(list[3].minDelay == -1 && list[3].fifoMaxEventCount == 0);
     });
-    auto arm = [&] { REQUIRE(adapter.activate(kPickup, true) == Result::OK); REQUIRE(stock.active); };
     int64_t marker = 1;
+    auto proximity = [&](float distance, int64_t timestamp = 0) {
+        stock.proximity(distance, timestamp ? timestamp : nowNs(), ++marker);
+        return sink->until(marker);
+    };
+    auto arm = [&] {
+        REQUIRE(adapter.activate(kPickup, true) == Result::OK);
+        REQUIRE(stock.enabled[0xa0020] && stock.enabled[0x52]);
+        REQUIRE(proximity(5).size() == 1); // internal proximity remains private
+    };
     auto emit = [&](float action, int64_t timestamp = 0) {
         stock.emit(action, timestamp ? timestamp : nowNs(), ++marker);
         return sink->until(marker);
@@ -134,23 +158,84 @@ int main() {
     REQUIRE(emit(2).size() == 1); // stock excludes 2 after 7
     auto events = emit(6);
     REQUIRE(events.size() == 2 && events[0].sensorHandle == kPickup && events[0].u.scalar == 1);
-    REQUIRE(!stock.active);
+    REQUIRE(!stock.enabled[0xa0020] && !stock.enabled[0x52]);
     REQUIRE(emit(6).size() == 1); // exactly once until rearmed
     arm();
     REQUIRE(emit(6, 1).size() == 1); // reject stale vendor event after rearm
     REQUIRE(emit(6).size() == 2);
     arm();
     REQUIRE(adapter.activate(kPickup, false) == Result::OK);
-    REQUIRE(emit(6).size() == 1 && !stock.active);
+    REQUIRE(emit(6).size() == 1 && !stock.enabled[0xa0020] && !stock.enabled[0x52]);
     REQUIRE(adapter.activate(0xa0020, true) == Result::OK);
     arm();
     events = emit(6);
     REQUIRE(events.size() == 3 && events[0].sensorHandle == 0xa0020);
-    REQUIRE(stock.active); // private client still owns its subscription
-    REQUIRE(adapter.activate(0xa0020, false) == Result::OK && !stock.active);
+    REQUIRE(stock.enabled[0xa0020]); // private client still owns its subscription
+    REQUIRE(adapter.activate(0xa0020, false) == Result::OK && !stock.enabled[0xa0020]);
     arm();
     REQUIRE(emit(1).size() == 1);
     REQUIRE(emit(2).size() == 2); // stock accepts 2 after non-6/7
+    // A missing or old sample cannot authorize a lift in a new enable period.
+    REQUIRE(adapter.activate(kPickup, true) == Result::OK);
+    REQUIRE(emit(6).size() == 1);
+    REQUIRE(proximity(5, 1).size() == 1);
+    REQUIRE(emit(6).size() == 1);
+    REQUIRE(proximity(0).size() == 1);
+    REQUIRE(proximity(5, nowNs() - 1000000000).size() == 1);
+    REQUIRE(emit(6).size() == 1 && stock.enabled[0xa0020]);
+    REQUIRE(proximity(5).size() == 1);
+    REQUIRE(emit(6).size() == 2); // a covered lift did not consume the one-shot
+    arm();
+    REQUIRE(proximity(NAN).size() == 1);
+    REQUIRE(proximity(5, nowNs() - 1000000000).size() == 1);
+    REQUIRE(emit(6).size() == 1);
+    REQUIRE(proximity(-1).size() == 1);
+    REQUIRE(emit(6).size() == 1);
+    REQUIRE(proximity(5).size() == 1);
+    REQUIRE(emit(6).size() == 2);
+    // Preserve normal proximity delivery and restore its batching requirements.
+    REQUIRE(adapter.batch(0x52, 100000000, 1000000000) == Result::OK);
+    REQUIRE(adapter.activate(0x52, true) == Result::OK);
+    REQUIRE(proximity(0).size() == 2);
+    REQUIRE(adapter.activate(kPickup, true) == Result::OK);
+    REQUIRE(stock.latencies[0x52] == 0 && stock.periods[0x52] == 100000000);
+    REQUIRE(emit(6).size() == 1); // do not discard an existing near sample
+    REQUIRE(proximity(5).size() == 2);
+    REQUIRE(emit(6).size() == 2);
+    REQUIRE(stock.enabled[0x52] && stock.latencies[0x52] == 1000000000);
+    REQUIRE(adapter.activate(kPickup, true) == Result::OK);
+    REQUIRE(adapter.activate(0x52, false) == Result::OK);
+    REQUIRE(stock.enabled[0x52] && stock.latencies[0x52] == 0);
+    REQUIRE(proximity(0).size() == 1);
+    REQUIRE(emit(6).size() == 1);
+    REQUIRE(adapter.activate(kPickup, false) == Result::OK && !stock.enabled[0x52]);
+    // If proximity cannot be enabled, the standard pickup must remain disabled.
+    stock.failActivate = 0x52;
+    REQUIRE(adapter.activate(kPickup, true) == Result::BAD_VALUE);
+    REQUIRE(emit(6).size() == 1 && !stock.enabled[0xa0020]);
+    stock.failActivate = -1;
+    stock.failActivate = 0xa0020;
+    REQUIRE(adapter.activate(kPickup, true) == Result::BAD_VALUE);
+    REQUIRE(!stock.enabled[0x52]); // rollback the newly acquired proximity
+    stock.failActivate = -1;
+    stock.failBatch = 0x52;
+    REQUIRE(adapter.activate(kPickup, true) == Result::BAD_VALUE);
+    REQUIRE(!stock.enabled[0x52] && emit(6).size() == 1);
+    stock.failBatch = -1;
+    arm();
+    REQUIRE(adapter.activate(0x52, true) == Result::OK);
+    events = emit(7);
+    REQUIRE(events.size() == 2 && events[0].sensorHandle == 0x52 && events[0].u.scalar == 5);
+    REQUIRE(adapter.activate(0x52, false) == Result::OK);
+    REQUIRE(proximity(0).size() == 1);
+    REQUIRE(adapter.activate(0x52, true) == Result::OK);
+    events = emit(7);
+    REQUIRE(events.size() == 2 && events[0].sensorHandle == 0x52 && events[0].u.scalar == 0);
+    REQUIRE(emit(6).size() == 1);
+    REQUIRE(proximity(5).size() == 2);
+    REQUIRE(emit(6).size() == 2);
+    REQUIRE(stock.enabled[0x52]);
+    REQUIRE(adapter.activate(0x52, false) == Result::OK && !stock.enabled[0x52]);
     REQUIRE(adapter.batch(kPickup, 0, 1000000000) == Result::OK);
     REQUIRE(stock.lastHandle == 0xa0020 && stock.lastLatency == 0);
     REQUIRE(adapter.flush(kPickup) == Result::BAD_VALUE);
@@ -164,5 +249,5 @@ int main() {
                 directRejected = result == Result::BAD_VALUE && token == 0;
             });
     REQUIRE(directRejected);
-    printf("PASS: metadata, stock action filtering, one-shot rearm/cancel/stale events, private coexistence, batching and wake-lock ownership\n");
+    printf("PASS: metadata, actions, one-shot/cancel/stale, proximity near/unknown/invalid, shared subscriptions/batching, failure rollback, wake-lock ownership\n");
 }
