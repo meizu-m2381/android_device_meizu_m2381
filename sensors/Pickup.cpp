@@ -12,6 +12,7 @@
 #include <map>
 #include <mutex>
 #include <thread>
+#include "DoubleTap.h"
 
 namespace android::hardware::sensors::V2_1::implementation {
 using V1_0::OperationMode;
@@ -97,6 +98,10 @@ public:
         }
         ALOGI("Stock raise=%d proximity=%d; standard pickup available=%d",
               raise_, proximity_, available_);
+        if (flags_.count(kDoubleTap) == 0) {
+            list_.push_back(DoubleTap::info());
+            flags_[kDoubleTap] = 5;
+        }
         worker_ = std::thread([this] { dispatch(); });
     }
     ~Pickup() override {
@@ -113,6 +118,7 @@ public:
         return Void();
     }
     Return<Result> initialize(const sp<IHalProxyCallback>& callback) override {
+        doubleTap_.initialize(callback);
         std::lock_guard control(control_);
         {
             std::lock_guard lock(mutex_);
@@ -129,6 +135,7 @@ public:
         return stock_->initialize(sp<Callback>::make(this));
     }
     Return<Result> activate(int32_t handle, bool enabled) override {
+        if (handle == kDoubleTap) return doubleTap_.activate(enabled);
         if (handle == proximity_) {
             std::lock_guard control(control_);
             // An internal pickup subscription must not be disabled by a client
@@ -189,6 +196,7 @@ public:
         return result;
     }
     Return<Result> batch(int32_t h, int64_t period, int64_t latency) override {
+        if (h == kDoubleTap) return Result::OK; // one-shot cannot batch
         if (h == kPickup) return stock_->batch(raise_, 200000000, 0);
         if (h == proximity_) {
             std::lock_guard control(control_);
@@ -203,10 +211,11 @@ public:
         return stock_->batch(h, period, latency);
     }
     Return<Result> flush(int32_t h) override {
-        return h == kPickup ? Return<Result>(Result::BAD_VALUE) : stock_->flush(h);
+        return h == kPickup || h == kDoubleTap ? Return<Result>(Result::BAD_VALUE) : stock_->flush(h);
     }
     Return<Result> injectSensorData_2_1(const Event& event) override {
-        return event.sensorHandle == kPickup ? Return<Result>(Result::INVALID_OPERATION)
+        return event.sensorHandle == kPickup || event.sensorHandle == kDoubleTap
+                                            ? Return<Result>(Result::INVALID_OPERATION)
                                             : stock_->injectSensorData_2_1(event);
     }
     Return<Result> setOperationMode(OperationMode mode) override {
@@ -221,7 +230,7 @@ public:
     }
     Return<void> configDirectReport(int32_t h, int32_t channel, RateLevel rate,
                                    configDirectReport_cb cb) override {
-        if (h == kPickup) { cb(Result::BAD_VALUE, 0); return Void(); }
+        if (h == kPickup || h == kDoubleTap) { cb(Result::BAD_VALUE, 0); return Void(); }
         return stock_->configDirectReport(h, channel, rate, cb);
     }
     Return<void> debug(const hidl_handle& fd, const hidl_vec<hidl_string>& args) override {
@@ -345,6 +354,7 @@ private:
         }
     }
     ISensorsSubHal* stock_;
+    DoubleTap doubleTap_;
     int32_t raise_ = -1;
     int32_t proximity_ = -1;
     float farDistance_ = 0;

@@ -1,0 +1,5 @@
+# The double-tap sub-HAL reads only main_touch evdev, without grabbing it.
+allow hal_sensors_default input_device:dir r_dir_perms;
+allow hal_sensors_default input_device:chr_file r_file_perms;
+# EVIOCGNAME, EVIOCGBIT(EV_KEY), EVIOCSCLOCKID (command numbers without size).
+allowxperm hal_sensors_default input_device:chr_file ioctl { 0x4506 0x4521 0x45a0 };

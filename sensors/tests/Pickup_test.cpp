@@ -5,6 +5,7 @@
 #include <chrono>
 #include <cstdio>
 #include <cstdlib>
+#include <sys/socket.h>
 
 using namespace android;
 using namespace android::hardware;
@@ -63,6 +64,17 @@ public:
         auto out = std::move(received);
         received.clear();
         return out;
+    }
+    std::vector<Event> waitForCount(size_t count) {
+        std::unique_lock lock(mutex);
+        REQUIRE(ready.wait_for(lock, 2s, [&] { return received.size() >= count; }));
+        auto out = std::move(received);
+        received.clear();
+        return out;
+    }
+    void quiet() {
+        std::unique_lock lock(mutex);
+        REQUIRE(!ready.wait_for(lock, 50ms, [&] { return !received.empty(); }));
     }
     sp<Counter> counter = sp<Counter>::make();
     std::mutex mutex;
@@ -128,13 +140,66 @@ public:
     int64_t lastLatency = -1;
 };
 
+void testDoubleTap() {
+    int sockets[2];
+    REQUIRE(socketpair(AF_UNIX, SOCK_DGRAM | SOCK_NONBLOCK | SOCK_CLOEXEC, 0, sockets) == 0);
+    auto sink = sp<Sink>::make();
+    DoubleTap touch([&] { return dup(sockets[0]); });
+    touch.initialize(sink);
+    auto send = [&](uint16_t type, uint16_t code, int32_t value, int64_t timestamp = 0) {
+        input_event event{};
+        int64_t time = timestamp ? timestamp : nowNs();
+        event.time.tv_sec = time / 1000000000;
+        event.time.tv_usec = (time % 1000000000) / 1000;
+        event.type = type; event.code = code; event.value = value;
+        REQUIRE(write(sockets[1], &event, sizeof(event)) == sizeof(event));
+    };
+    auto report = [&] { send(EV_SYN, SYN_REPORT, 0); };
+    auto gesture = [&] { send(EV_KEY, kDoubleTapKey, 1); report(); };
+    const auto info = DoubleTap::info();
+    REQUIRE(info.sensorHandle == kDoubleTap && info.flags == 5 && info.minDelay == -1);
+    REQUIRE(info.typeAsString == "com.meizu.sensor.double_tap");
+    gesture(); // old events must not fire when the interface is armed
+    REQUIRE(touch.activate(true) == Result::OK);
+    sink->quiet();
+    send(EV_KEY, 625, 1); report(); // single tap, not double tap
+    send(EV_KEY, 626, 1); report(); // fingerprint press
+    send(EV_KEY, kDoubleTapKey, 0); report(); // key release
+    send(EV_KEY, kDoubleTapKey, 2); report(); // repeat
+    send(EV_KEY, kDoubleTapKey, 1, 1); report(); // old clock timestamp
+    sink->quiet();
+    gesture();
+    auto events = sink->waitForCount(1);
+    REQUIRE(events.size() == 1 && events[0].sensorHandle == kDoubleTap);
+    REQUIRE(events[0].sensorType == kDoubleTapType && events[0].u.scalar == 1);
+    gesture(); sink->quiet(); // one-shot
+    REQUIRE(touch.activate(true) == Result::OK);
+    REQUIRE(touch.activate(false) == Result::OK);
+    gesture(); sink->quiet(); // cancellation
+    REQUIRE(touch.activate(true) == Result::OK);
+    send(EV_KEY, kDoubleTapKey, 1);
+    sink->quiet(); // incomplete frame cannot trigger
+    send(EV_SYN, SYN_DROPPED, 0); report();
+    sink->quiet(); // dropped frame cannot trigger
+    gesture();
+    REQUIRE(sink->waitForCount(1).size() == 1);
+    touch.initialize(sink);
+    gesture(); sink->quiet();
+    DoubleTap missing([] { return -1; });
+    missing.initialize(sink);
+    REQUIRE(missing.activate(true) == Result::INVALID_OPERATION);
+    close(sockets[0]); close(sockets[1]);
+    printf("PASS: double tap evdev code/frame filtering, one-shot, cancel, stale input, SYN_DROPPED, missing device, wake-lock ownership\n");
+}
+
 int main() {
+    testDoubleTap();
     Stock stock;
     Pickup adapter(&stock);
     auto sink = sp<Sink>::make();
     REQUIRE(adapter.initialize(sink) == Result::OK);
     adapter.getSensorsList_2_1([](const auto& list) {
-        REQUIRE(list.size() == 4);
+        REQUIRE(list.size() == 5);
         REQUIRE(list[1].typeAsString == "com.meizu.sensor.raise");
         REQUIRE(list[3].type == SensorType::PICK_UP_GESTURE && list[3].flags == 5);
         REQUIRE(list[3].minDelay == -1 && list[3].fifoMaxEventCount == 0);

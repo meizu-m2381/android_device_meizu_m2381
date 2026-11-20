@@ -38,3 +38,21 @@
 - 原始事件及转换后批次的唤醒锁所有权。
 
 这些模拟边界测试不能替代真机 SystemUI 的抬起亮屏、设置开关、遮挡及重启检查。
+
+## 双击亮屏
+
+原厂 Goodix 驱动将固件双击码 `0xcc` 转成 Meizu evdev 键码 624（`0x270`），
+不是通用 `KEY_WAKEUP=143`。保留未映射的原始键，新增
+`com.meizu.sensor.double_tap` 唤醒型一次性传感器，并用设备 framework overlay
+的 `config_dozeDoubleTapSensorType` 接入 SystemUI。沿用系统
+`doze_pulse_on_double_tap` 开关与 `doze_double_tap_proximity_check=true` 的距离检查。
+
+监听按设备名及键能力查找 `main_touch`，使用 BOOTTIME 时间戳，只接受键码624
+按下并完成 SYN_REPORT 的新事件。单击625、指纹626、释放、重复按键、旧时间戳、
+不完整或 SYN_DROPPED 帧均不触发；取消或一次性触发后关闭输入 fd，工作线程
+通过 eventfd 阻塞等待，不抓取触摸设备、不合成触摸坐标、不新增常驻唤醒锁。
+原厂手势初始化与指纹所需驱动开关保持现有配置。
+
+传感器服务需要 `input` 补充组；设备策略允许读取 evdev 并设置该 fd 的时间基准。
+测试用 socketpair 传输真实 input_event 格式，覆盖上述过滤、重新监听、取消、
+设备不可用及唤醒锁传递；该测试不能替代实体屏幕双击、遮挡、关闭开关和重启验证。

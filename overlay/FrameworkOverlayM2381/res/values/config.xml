@@ -12,6 +12,7 @@
     <bool name="config_dozeAlwaysOnDisplayAvailable">true</bool>
     <bool name="config_dozeAlwaysOnEnabled">false</bool>
     <bool name="config_dozePulsePickup">true</bool>
+    <string name="config_dozeDoubleTapSensorType" translatable="false">com.meizu.sensor.double_tap</string>
     <bool name="config_enableAutoPowerModes">true</bool>
     <bool name="config_enableHapticTextHandle">true</bool>
     <bool name="config_enableMultiUserUI">true</bool>
