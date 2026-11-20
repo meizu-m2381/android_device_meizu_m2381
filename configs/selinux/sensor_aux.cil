@@ -1,0 +1,4 @@
+; The product installs stock API 33 vendor CIL plus these device adaptations.
+; Keep panel brightness on its stock label for lights and the SensorAux HAL.
+; Only the display-power node needs a new, narrowly scoped core-readable label.
+(genfscon sysfs "/devices/platform/soc/ae00000.qcom,mdss_mdp/drm/card0/card0-DSI-1/dpms" (u object_r sysfs_m2381_display ((s0) (s0))))

@@ -9,6 +9,6 @@ hwbinder_use(hal_meizu_sensor_aux_default)
 binder_call(hal_meizu_sensor_aux_default, hal_sensors_default)
 binder_call(hal_sensors_default, hal_meizu_sensor_aux_default)
 allow hal_meizu_sensor_aux_default sysfs_type:dir search;
-allow hal_meizu_sensor_aux_default sysfs_m2381_display:file r_file_perms;
+allow hal_meizu_sensor_aux_default vendor_sysfs_graphics:file r_file_perms;
 get_prop(hal_meizu_sensor_aux_default, surfaceflinger_color_prop)
 allow hal_meizu_sensor_aux_default vendor_hal_sensorscalibrate_qti_hwservice:hwservice_manager find;

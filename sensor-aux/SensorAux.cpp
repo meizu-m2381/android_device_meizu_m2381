@@ -2,7 +2,6 @@
 #define LOG_TAG "M2381SensorAux"
 
 #include <android-base/file.h>
-#include <android-base/parseint.h>
 #include <android-base/strings.h>
 #include <android/gui/BnRegionSamplingListener.h>
 #include <android/gui/BnScreenCaptureListener.h>
@@ -30,7 +29,6 @@ using namespace std::chrono_literals;
 
 namespace {
 constexpr char kDescriptor[] = "vendor.meizu.sensor_aux@1.0::ISensorAux";
-constexpr char kBrightness[] = "/sys/class/backlight/panel0-backlight/brightness";
 constexpr char kPower[] = "/sys/class/drm/card0-DSI-1/dpms";
 // Flyme's libsensorservice uses this physical panel region on m2381.
 const Rect kRegion(672, 62, 684, 74);
@@ -179,12 +177,6 @@ bool displayOn() {
     return base::ReadFileToString(kPower, &power) && base::Trim(power) == "On";
 }
 
-int brightness() {
-    std::string value;
-    int result = -1;
-    if (base::ReadFileToString(kBrightness, &value)) base::ParseInt(base::Trim(value), &result);
-    return result;
-}
 } // namespace
 
 int main() {
@@ -196,7 +188,7 @@ int main() {
     sp<IBinder> display;
     Rect activeRegion;
     bool connected = false, enabled = false, registered = false;
-    int lastBrightness = -1;
+    std::optional<uint32_t> lastRgb;
     auto lastCapture = std::chrono::steady_clock::now() - 10s;
     while (running) {
         const auto cycle = std::chrono::steady_clock::now();
@@ -216,7 +208,7 @@ int main() {
             }
             if (enabled && !aux.control(false)) connected = false;
             enabled = false;
-            lastBrightness = -1;
+            lastRgb.reset();
             // CLOCK_MONOTONIC sleeps do not wake a suspended device. No wakelock.
             std::this_thread::sleep_for(1s);
             continue;
@@ -231,6 +223,11 @@ int main() {
         }
         const auto region = samplingRegion(display);
         if (!region) {
+            if (registered) SurfaceComposerClient::removeRegionSamplingListener(listener);
+            registered = false;
+            aux.control(false);
+            enabled = false;
+            lastRgb.reset();
             display.clear();
             std::this_thread::sleep_for(1s);
             continue;
@@ -253,8 +250,7 @@ int main() {
             enabled = true;
             listener->dirty.store(true);
         }
-        const int currentBrightness = brightness();
-        const bool changed = listener->dirty.exchange(false) || currentBrightness != lastBrightness;
+        const bool changed = listener->dirty.exchange(false);
         // Rare fallback also recovers a lost composer listener after SF restarts.
         if (changed || cycle - lastCapture > 5s) {
             const auto rgb = capture(display, *region);
@@ -268,16 +264,20 @@ int main() {
                 std::this_thread::sleep_for(1s);
                 continue;
             }
-            if (!aux.update(*rgb)) {
-                connected = false;
-                enabled = false;
-                std::this_thread::sleep_for(1s);
-                continue;
-            }
-            lastBrightness = currentBrightness;
+            lastRgb = rgb;
             lastCapture = cycle;
         }
-        // Coalesce animations; unchanged frames only need a cheap sysfs check.
+        // The stock HAL reads backlight and skips SSC updates if both RGB and
+        // backlight are unchanged. Keep that vendor access inside the HAL;
+        // brightness-only changes do not need another screen capture.
+        if (lastRgb && !aux.update(*lastRgb)) {
+            connected = false;
+            enabled = false;
+            lastRgb.reset();
+            std::this_thread::sleep_for(1s);
+            continue;
+        }
+        // Coalesce animations and let the stock HAL detect backlight changes.
         std::this_thread::sleep_until(cycle + 250ms);
     }
     if (registered) SurfaceComposerClient::removeRegionSamplingListener(listener);
