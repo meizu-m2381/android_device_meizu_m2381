@@ -166,6 +166,9 @@ PRODUCT_COPY_FILES += \
     frameworks/native/data/etc/android.hardware.camera.raw.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.camera.raw.xml
 
 # Display
+PRODUCT_COPY_FILES += \
+    $(LOCAL_PATH)/configs/display/display_id_4630946981250209410.xml:$(TARGET_COPY_OUT_PRODUCT)/etc/displayconfig/display_id_4630946981250209410.xml
+
 # composer/allocator/demura 服务与 mapper 实现都在 vendor blobs 里
 # （proprietary/vendor/bin/hw 与 lib64/hw 均有对应文件）。源码侧显示 HAL 依赖
 # 未公开的内核 uapi 头（display/drm/sde_drm.h），因此不编译。
