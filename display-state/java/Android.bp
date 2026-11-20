@@ -1,0 +1,8 @@
+// SPDX-License-Identifier: Apache-2.0
+java_library {
+    name: "m2381-display-aux",
+    system_ext_specific: true,
+    srcs: ["**/*.java"],
+    libs: ["services.core"],
+    installable: true,
+}

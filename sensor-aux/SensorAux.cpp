@@ -8,6 +8,7 @@
 #include <android/hidl/base/1.0/IBase.h>
 #include <android/os/IPowerManager.h>
 #include <binder/IServiceManager.h>
+#include <binder/Parcel.h>
 #include <binder/ProcessState.h>
 #include <gui/SurfaceComposerClient.h>
 #include <hidl/HidlBinderSupport.h>
@@ -19,6 +20,8 @@
 #include <ui/DisplayState.h>
 
 #include <atomic>
+#include <algorithm>
+#include <array>
 #include <chrono>
 #include <cmath>
 #include <csignal>
@@ -126,7 +129,48 @@ std::optional<Rect> samplingRegion(const sp<IBinder>& display) {
     return region;
 }
 
-std::optional<uint32_t> capture(const sp<IBinder>& display, const Rect& region) {
+struct ColorTransform {
+    std::array<float, 16> matrix;
+    bool linear;
+};
+
+std::optional<ColorTransform> colorTransform() {
+    static sp<IBinder> service;
+    if (!service) {
+        service = defaultServiceManager()->checkService(String16("m2381_display_aux"));
+    }
+    if (!service) return std::nullopt;
+    Parcel request, reply;
+    request.writeInterfaceToken(String16("meizu.display.IColorTransform"));
+    if (service->transact(IBinder::FIRST_CALL_TRANSACTION, request, &reply) != OK) {
+        service.clear();
+        return std::nullopt;
+    }
+    if (reply.readExceptionCode() != 0 || reply.readInt32() != 1) return std::nullopt;
+    ColorTransform transform;
+    transform.linear = reply.readInt32() != 0;
+    for (auto& value : transform.matrix) {
+        if (reply.readFloat(&value) != OK || !std::isfinite(value)) return std::nullopt;
+    }
+    return transform;
+}
+
+struct Sample {
+    std::array<uint32_t, 144> pixels{};
+    bool supported = true;
+};
+
+std::optional<gui::ScreenCaptureResults> captureFrame(const gui::DisplayCaptureArgs& args) {
+    auto listener = sp<CaptureListener>::make();
+    auto future = listener->promise.get_future();
+    if (ScreenshotClient::captureDisplay(args, listener) != OK ||
+            future.wait_for(750ms) != std::future_status::ready) {
+        return std::nullopt;
+    }
+    return future.get();
+}
+
+std::optional<Sample> capture(const sp<IBinder>& display, const Rect& region) {
     gui::DisplayCaptureArgs args;
     args.displayToken = display;
     args.captureArgs.sourceCrop.left = region.left;
@@ -136,15 +180,42 @@ std::optional<uint32_t> capture(const sp<IBinder>& display, const Rect& region) 
     args.width = kRegion.getWidth();
     args.height = kRegion.getHeight();
     args.captureArgs.dataspace = static_cast<int32_t>(ui::Dataspace::V0_SRGB);
-    args.captureArgs.secureLayerMode = gui::SecureLayerMode::Capture;
+    args.captureArgs.secureLayerMode = gui::SecureLayerMode::Redact;
+    args.captureArgs.protectedLayerMode = gui::ProtectedLayerMode::Error;
     args.captureArgs.preserveDisplayColors = true;
-    auto listener = sp<CaptureListener>::make();
-    auto future = listener->promise.get_future();
-    if (ScreenshotClient::captureDisplay(args, listener) != OK ||
-            future.wait_for(750ms) != std::future_status::ready) {
+    // Android 17's GPU path redacts protected buffers even with Error mode,
+    // and ScreenCaptureResults has no protected-content flag. Its DPU path
+    // explicitly returns PERMISSION_DENIED for protected or secure layers.
+    // This sRGB/scaled crop cannot use DPU readback: normal content returns
+    // INVALID_OPERATION, without allocating/capturing any protected pixels.
+    args.captureArgs.captureMode = gui::CaptureMode::RequireOptimized;
+    const auto preflight = captureFrame(args);
+    if (!preflight) return std::nullopt;
+    if (!preflight->fenceResult.ok() && preflight->fenceResult.error() == PERMISSION_DENIED) {
+        Sample sample;
+        sample.supported = false;
+        return sample;
+    }
+    if (preflight->fenceResult.ok() || preflight->fenceResult.error() != INVALID_OPERATION) {
         return std::nullopt;
     }
-    auto result = future.get();
+    args.captureArgs.captureMode = gui::CaptureMode::None;
+    // Keep the display's SDR primaries instead of clipping wide-gamut content
+    // to sRGB before calculating the panel RGB. Both supported outputs use
+    // the sRGB transfer function; HDR is handled as unsupported below.
+    args.captureArgs.dataspace = static_cast<int32_t>(ui::Dataspace::UNKNOWN);
+    const auto captured = captureFrame(args);
+    if (!captured) return std::nullopt;
+    const auto& result = *captured;
+    // A redacted secure layer is not a black emitting pixel. HDR screenshots
+    // are tone-mapped and cannot be treated as calibrated panel RGB either.
+    if (result.capturedSecureLayers || result.capturedHdrLayers ||
+            (result.capturedDataspace != ui::Dataspace::V0_SRGB &&
+             result.capturedDataspace != ui::Dataspace::DISPLAY_P3)) {
+        Sample sample;
+        sample.supported = false;
+        return sample;
+    }
     if (!result.fenceResult.ok() || !result.buffer ||
             result.fenceResult.value()->wait(250) != OK) {
         return std::nullopt;
@@ -156,22 +227,48 @@ std::optional<uint32_t> capture(const sp<IBinder>& display, const Rect& region) 
     }
     void* address = nullptr;
     if (buffer->lock(GRALLOC_USAGE_SW_READ_OFTEN, &address) != OK) return std::nullopt;
-    uint32_t red = 0, green = 0, blue = 0;
+    Sample sample;
     if (address) {
         const auto* pixels = static_cast<const uint32_t*>(address);
         for (unsigned y = 0; y < 12; ++y) {
             for (unsigned x = 0; x < 12; ++x) {
-                const uint32_t pixel = pixels[y * buffer->getStride() + x];
-                red += pixel & 255;
-                green += (pixel >> 8) & 255;
-                blue += (pixel >> 16) & 255;
+                sample.pixels[y * 12 + x] = pixels[y * buffer->getStride() + x];
             }
         }
     }
     buffer->unlock();
     if (!address) return std::nullopt;
-    // Only this average leaves the process. No image or RGB history is stored.
-    return ((red / 144) << 16) | ((green / 144) << 8) | (blue / 144);
+    return sample;
+}
+
+float toLinear(float value) {
+    return value <= .04045f ? value / 12.92f : std::pow((value + .055f) / 1.055f, 2.4f);
+}
+
+float toSrgb(float value) {
+    return value <= .0031308f ? 12.92f * value : 1.055f * std::pow(value, 1.f / 2.4f) - .055f;
+}
+
+uint32_t average(const Sample& sample, const ColorTransform& transform) {
+    std::array<double, 3> sums{};
+    const auto& m = transform.matrix;
+    for (uint32_t pixel : sample.pixels) {
+        std::array<float, 3> rgb{(pixel & 255) / 255.f, ((pixel >> 8) & 255) / 255.f,
+                                 ((pixel >> 16) & 255) / 255.f};
+        if (transform.linear) for (auto& value : rgb) value = toLinear(value);
+        for (size_t channel = 0; channel < 3; ++channel) {
+            float value = std::clamp(m[channel] * rgb[0] + m[4 + channel] * rgb[1] +
+                                             m[8 + channel] * rgb[2] + m[12 + channel],
+                                     0.f, 1.f);
+            if (transform.linear) value = toSrgb(value);
+            sums[channel] += value * 255.f;
+        }
+    }
+    // Only the transformed average leaves this process. The last tiny sample
+    // stays in memory so matrix animations do not require additional captures.
+    return (static_cast<uint32_t>(std::lround(sums[0] / 144)) << 16) |
+            (static_cast<uint32_t>(std::lround(sums[1] / 144)) << 8) |
+            static_cast<uint32_t>(std::lround(sums[2] / 144));
 }
 
 bool displayOn() {
@@ -204,7 +301,7 @@ int main() {
     sp<IBinder> display;
     Rect activeRegion;
     bool connected = false, enabled = false, registered = false;
-    std::optional<uint32_t> lastRgb;
+    std::optional<Sample> lastSample;
     auto lastCapture = std::chrono::steady_clock::now() - 10s;
     while (running) {
         const auto cycle = std::chrono::steady_clock::now();
@@ -224,7 +321,7 @@ int main() {
             }
             if (enabled && !aux.control(false)) connected = false;
             enabled = false;
-            lastRgb.reset();
+            lastSample.reset();
             // CLOCK_MONOTONIC sleeps do not wake a suspended device. No wakelock.
             std::this_thread::sleep_for(1s);
             continue;
@@ -243,7 +340,7 @@ int main() {
             registered = false;
             aux.control(false);
             enabled = false;
-            lastRgb.reset();
+            lastSample.reset();
             display.clear();
             std::this_thread::sleep_for(1s);
             continue;
@@ -259,6 +356,13 @@ int main() {
             activeRegion = *region;
             listener->dirty.store(true);
         }
+        const auto transform = colorTransform();
+        if (!transform) {
+            if (enabled && !aux.control(false)) connected = false;
+            enabled = false;
+            std::this_thread::sleep_for(1s);
+            continue;
+        }
         if (!enabled) {
             // Stock updateRGBAvg skips unchanged RGB and backlight. Force a
             // transition so waking to the same frame re-enables DSP compensation.
@@ -269,8 +373,8 @@ int main() {
         const bool changed = listener->dirty.exchange(false);
         // Rare fallback also recovers a lost composer listener after SF restarts.
         if (changed || cycle - lastCapture > 5s) {
-            const auto rgb = capture(display, *region);
-            if (!rgb) {
+            const auto sample = capture(display, *region);
+            if (!sample) {
                 ALOGW("Region capture unavailable; reconnecting compositor");
                 aux.control(false);
                 enabled = false;
@@ -280,16 +384,22 @@ int main() {
                 std::this_thread::sleep_for(1s);
                 continue;
             }
-            lastRgb = rgb;
+            lastSample = sample;
             lastCapture = cycle;
+        }
+        if (lastSample && !lastSample->supported) {
+            if (enabled && !aux.control(false)) connected = false;
+            enabled = false;
+            std::this_thread::sleep_for(1s);
+            continue;
         }
         // The stock HAL reads backlight and skips SSC updates if both RGB and
         // backlight are unchanged. Keep that vendor access inside the HAL;
         // brightness-only changes do not need another screen capture.
-        if (lastRgb && !aux.update(*lastRgb)) {
+        if (lastSample && !aux.update(average(*lastSample, *transform))) {
             connected = false;
             enabled = false;
-            lastRgb.reset();
+            lastSample.reset();
             std::this_thread::sleep_for(1s);
             continue;
         }

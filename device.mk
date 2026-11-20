@@ -466,8 +466,11 @@ PRODUCT_COPY_FILES += \
     frameworks/native/data/etc/android.hardware.usb.host.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.usb.host.xml
 
 # Vendor service manager
+PRODUCT_SYSTEM_SERVER_JARS += system_ext:m2381-display-aux
+
 PRODUCT_PACKAGES += \
     m2381-aod \
+    m2381-display-aux \
     vndservicemanager
 
 # VNDK
