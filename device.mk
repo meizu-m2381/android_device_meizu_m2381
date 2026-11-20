@@ -467,6 +467,7 @@ PRODUCT_COPY_FILES += \
 
 # Vendor service manager
 PRODUCT_PACKAGES += \
+    m2381-aod \
     vndservicemanager
 
 # VNDK

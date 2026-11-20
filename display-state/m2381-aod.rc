@@ -1,0 +1,4 @@
+service vendor.m2381-aod /vendor/bin/m2381-aod
+    class late_start
+    user system
+    group system

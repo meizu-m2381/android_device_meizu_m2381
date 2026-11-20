@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
+/(vendor|system/vendor)/bin/m2381-aod u:object_r:vendor_m2381_aod_exec:s0
 /(vendor|system/vendor)/bin/hw/android\.hardware\.biometrics\.fingerprint-service-jv u:object_r:hal_fingerprint_default_exec:s0
 
 /dev/jiiov_fp    u:object_r:vendor_jiiov_fp_device:s0
