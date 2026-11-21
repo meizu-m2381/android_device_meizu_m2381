@@ -21,5 +21,6 @@
 (allow vendor_m2381_aod sysfs_33_0 (dir (getattr open read search)))
 (allow vendor_m2381_aod sysfs_type (dir (search)))
 (allow vendor_m2381_aod vendor_sysfs_m2381_aod (file (getattr open read write)))
+(allow vendor_m2381_aod m2381_aod_brightness_prop (file (getattr open read map)))
 (genfscon sysfs "/kernel/display_drivers/aod_light_mode" (u object_r vendor_sysfs_m2381_aod ((s0) (s0))))
 (genfscon sysfs "/devices/platform/soc/soc:qcom,dsi-display-primary/display/aod" (u object_r vendor_sysfs_m2381_aod ((s0) (s0))))

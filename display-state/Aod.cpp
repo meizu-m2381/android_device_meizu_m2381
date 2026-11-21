@@ -1,10 +1,13 @@
 // SPDX-License-Identifier: Apache-2.0
 #include <fcntl.h>
 #include <signal.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
+#include <sys/system_properties.h>
+#include "AodMode.h"
 
 namespace {
 constexpr char kPanelState[] = "/sys/class/meizu/lcm/display/aod";
@@ -27,19 +30,25 @@ int main() {
     signal(SIGTERM, stop);
     signal(SIGINT, stop);
     while (running) {
-        char state[64], mode[64];
-        // LP1 resets the vendor brightness state to 2 (not initialized).
-        // Flyme's DozeScreenBrightness sends a separate 0/1 brightness command
-        // after entering DOZE. Initialize the verified dim mode only; leave
-        // existing valid modes and normal display brightness untouched.
+        char state[64], mode[64], ambient[PROP_VALUE_MAX]{};
+        // The framework device service publishes ambient hysteresis only.
+        // Keep the night override and hardware writes in this vendor helper.
+        __system_property_get("sys.m2381.aod.ambient_mode", ambient);
+        time_t now = time(nullptr);
+        tm local{};
+        int hour = localtime_r(&now, &local) ? local.tm_hour : -1;
+        int target = meizu::aodMode(ambient, hour);
+        int current = -1;
         if (readNode(kPanelState, state, sizeof(state)) && strtol(state, nullptr, 10) == 1 &&
             readNode(kLightMode, mode, sizeof(mode)) &&
-            strcmp(mode, "aod light mode is : 2\n") == 0) {
+            sscanf(mode, "aod light mode is : %d", &current) == 1 &&
+            current >= 0 && current <= 2 && current != target) {
             int fd = open(kLightMode, O_WRONLY | O_CLOEXEC);
             if (fd >= 0) {
                 // The kernel checks LP state again, including across a wake race.
-                // A failed write leaves mode 2 and is retried next cycle.
-                (void)write(fd, "0\n", 2);
+                // A failed write leaves the old mode and is retried next cycle.
+                const char command[]{static_cast<char>('0' + target), '\n'};
+                (void)write(fd, command, sizeof(command));
                 close(fd);
             }
         }

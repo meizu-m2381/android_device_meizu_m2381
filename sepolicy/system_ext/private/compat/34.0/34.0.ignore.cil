@@ -1,4 +1,4 @@
 ;; These device-specific types have no analogue in older policy APIs.
 (type new_objects)
 (typeattribute new_objects)
-(typeattributeset new_objects (new_objects hal_meizu_sensor_aux_hwservice sysfs_m2381_display))
+(typeattributeset new_objects (new_objects hal_meizu_sensor_aux_hwservice sysfs_m2381_display m2381_aod_brightness_prop))

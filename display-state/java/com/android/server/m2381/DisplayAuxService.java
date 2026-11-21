@@ -18,9 +18,14 @@ import android.provider.Settings;
 import com.android.server.LocalServices;
 import com.android.server.SystemService;
 import com.android.server.display.color.DisplayTransformManager;
+import com.android.internal.util.DumpUtils;
+
+import java.io.FileDescriptor;
+import java.io.PrintWriter;
 
 /** Exposes current framework transforms to the device's ALS compensation client. */
 public final class DisplayAuxService extends SystemService {
+    private AodBrightnessController mAodBrightness;
     private static final String DESCRIPTOR = "meizu.display.IColorTransform";
     private static final int[] LEVELS = {
         DisplayTransformManager.LEVEL_COLOR_MATRIX_NIGHT_DISPLAY,
@@ -39,6 +44,12 @@ public final class DisplayAuxService extends SystemService {
     public void onStart() {
         publishBinderService("m2381_display_aux", new Binder() {
             { attachInterface(null, DESCRIPTOR); }
+            @Override
+            protected void dump(FileDescriptor fd, PrintWriter writer, String[] args) {
+                if (!DumpUtils.checkDumpPermission(getContext(), "M2381DisplayAux", writer)) return;
+                if (mAodBrightness == null) writer.println("AOD controller waiting for boot completion");
+                else mAodBrightness.dump(writer);
+            }
             @Override
             protected boolean onTransact(int code, Parcel data, Parcel reply, int flags)
                     throws RemoteException {
@@ -104,5 +115,13 @@ public final class DisplayAuxService extends SystemService {
                 return true;
             }
         });
+    }
+
+    @Override
+    public void onBootPhase(int phase) {
+        if (phase == PHASE_BOOT_COMPLETED) {
+            mAodBrightness = new AodBrightnessController(getContext());
+            mAodBrightness.start();
+        }
     }
 }

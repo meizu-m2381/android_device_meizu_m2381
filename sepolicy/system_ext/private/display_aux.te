@@ -2,3 +2,4 @@
 type m2381_display_aux_service, service_manager_type, system_server_service;
 add_service(system_server, m2381_display_aux_service)
 allow m2381_sensor_aux m2381_display_aux_service:service_manager find;
+set_prop(system_server, m2381_aod_brightness_prop)

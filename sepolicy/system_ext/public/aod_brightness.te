@@ -1,0 +1,3 @@
+# SPDX-License-Identifier: Apache-2.0
+# System owns the desired mode; the vendor daemon can only read it.
+system_restricted_prop(m2381_aod_brightness_prop)

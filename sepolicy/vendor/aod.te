@@ -7,3 +7,4 @@ allow vendor_m2381_aod vendor_file:file rx_file_perms;
 allow vendor_m2381_aod sysfs:dir r_dir_perms;
 allow vendor_m2381_aod sysfs_type:dir search;
 allow vendor_m2381_aod vendor_sysfs_m2381_aod:file rw_file_perms;
+get_prop(vendor_m2381_aod, m2381_aod_brightness_prop)
