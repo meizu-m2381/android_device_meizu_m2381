@@ -50,7 +50,7 @@ LOCAL_MODULE_STEM := vendor_sepolicy.cil
 LOCAL_VENDOR_MODULE := true
 LOCAL_OVERRIDES_MODULES := vendor_sepolicy.cil
 m2381_vibrator_policy := $(call intermediates-dir-for,ETC,$(LOCAL_MODULE))/generated/vendor_sepolicy.cil
-$(m2381_vibrator_policy): vendor/meizu/m2381/proprietary/vendor/etc/selinux/vendor_sepolicy.cil $(LOCAL_PATH)/configs/selinux/vibrator.cil $(LOCAL_PATH)/configs/selinux/sensor_aux.cil $(LOCAL_PATH)/configs/selinux/aod.cil
+$(m2381_vibrator_policy): vendor/meizu/m2381/proprietary/vendor/etc/selinux/vendor_sepolicy.cil $(LOCAL_PATH)/configs/selinux/vibrator.cil $(LOCAL_PATH)/configs/selinux/sensor_aux.cil $(LOCAL_PATH)/configs/selinux/aod.cil $(LOCAL_PATH)/configs/selinux/power.cil
 	@mkdir -p $(dir $@)
 	cat $^ > $@
 LOCAL_PREBUILT_MODULE_FILE := $(m2381_vibrator_policy)
@@ -64,7 +64,7 @@ LOCAL_MODULE_STEM := vendor_file_contexts
 LOCAL_VENDOR_MODULE := true
 LOCAL_OVERRIDES_MODULES := vendor_file_contexts
 m2381_vibrator_contexts := $(call intermediates-dir-for,ETC,$(LOCAL_MODULE))/generated/vendor_file_contexts
-$(m2381_vibrator_contexts): vendor/meizu/m2381/proprietary/vendor/etc/selinux/vendor_file_contexts $(LOCAL_PATH)/configs/selinux/vibrator_file_contexts $(LOCAL_PATH)/configs/selinux/aod_file_contexts
+$(m2381_vibrator_contexts): vendor/meizu/m2381/proprietary/vendor/etc/selinux/vendor_file_contexts $(LOCAL_PATH)/configs/selinux/vibrator_file_contexts $(LOCAL_PATH)/configs/selinux/aod_file_contexts $(LOCAL_PATH)/configs/selinux/boot_file_contexts
 	@mkdir -p $(dir $@)
 	cat $^ > $@
 LOCAL_PREBUILT_MODULE_FILE := $(m2381_vibrator_contexts)
