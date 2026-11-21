@@ -138,8 +138,12 @@ PRODUCT_COPY_FILES += \
     device/meizu/m2381/configs/audio/kalama/audio_effects.xml:$(TARGET_COPY_OUT_VENDOR)/etc/audio/sku_kalama/audio_effects.xml \
     device/meizu/m2381/configs/audio/kalama/microphone_characteristics.xml:$(TARGET_COPY_OUT_VENDOR)/etc/microphone_characteristics.xml
 
+# TrustZone peripheral registration (including the Bluetooth controller).
+PRODUCT_PACKAGES += \
+    m2381_ssgtzd_rc \
+    m2381_ssgtzd_curl_v33
+
 # Bluetooth
-PRODUCT_PACKAGES += m2381_ssgtzd_rc
 
 PRODUCT_PACKAGES += \
     android.hardware.bluetooth.audio-impl \

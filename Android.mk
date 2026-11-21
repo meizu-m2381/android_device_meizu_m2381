@@ -27,6 +27,41 @@ $(m2381_media_helper): $(LOCAL_PATH)/tools/prepare_media_helper.py $(LOCAL_PATH)
 LOCAL_PREBUILT_MODULE_FILE := $(m2381_media_helper)
 include $(BUILD_PREBUILT)
 
+# Keep ssgtzd's curl and SSL on the same BoringSSL ABI as libcrypto-v33.
+# See LineageOS Gerrit 514289 for the matching SSL soname and dependency fixup.
+m2381_ssgtzd_vndk := prebuilts/vndk/v33/arm64/arch-arm64-armv8-a/shared/vndk-core
+m2381_ssgtzd_patchelf := prebuilts/extract-tools/linux-x86/bin/patchelf-0_17_2
+
+include $(CLEAR_VARS)
+LOCAL_MODULE := m2381_ssgtzd_ssl_v33
+LOCAL_MODULE_CLASS := ETC
+LOCAL_MODULE_PATH := $(TARGET_OUT_VENDOR)/lib64
+LOCAL_MODULE_STEM := libssl-ssgtzd-v33.so
+LOCAL_VENDOR_MODULE := true
+LOCAL_REQUIRED_MODULES := libcrypto-v33
+m2381_ssgtzd_ssl := $(call intermediates-dir-for,ETC,$(LOCAL_MODULE))/generated/$(LOCAL_MODULE_STEM)
+$(m2381_ssgtzd_ssl): $(m2381_ssgtzd_vndk)/libssl.so $(m2381_ssgtzd_patchelf)
+	@mkdir -p $(dir $@)
+	$(word 2,$^) --output $@.tmp --set-soname $(notdir $@) --replace-needed libcrypto.so libcrypto-v33.so $<
+	mv -f $@.tmp $@
+LOCAL_PREBUILT_MODULE_FILE := $(m2381_ssgtzd_ssl)
+include $(BUILD_PREBUILT)
+
+include $(CLEAR_VARS)
+LOCAL_MODULE := m2381_ssgtzd_curl_v33
+LOCAL_MODULE_CLASS := ETC
+LOCAL_MODULE_PATH := $(TARGET_OUT_VENDOR)/lib64
+LOCAL_MODULE_STEM := libcurl-ssgtzd-v33.so
+LOCAL_VENDOR_MODULE := true
+LOCAL_REQUIRED_MODULES := libcrypto-v33 m2381_ssgtzd_ssl_v33
+m2381_ssgtzd_curl := $(call intermediates-dir-for,ETC,$(LOCAL_MODULE))/generated/$(LOCAL_MODULE_STEM)
+$(m2381_ssgtzd_curl): $(m2381_ssgtzd_vndk)/libcurl.so $(m2381_ssgtzd_patchelf)
+	@mkdir -p $(dir $@)
+	$(word 2,$^) --output $@.tmp --set-soname $(notdir $@) --replace-needed libcrypto.so libcrypto-v33.so --replace-needed libssl.so libssl-ssgtzd-v33.so $<
+	mv -f $@.tmp $@
+LOCAL_PREBUILT_MODULE_FILE := $(m2381_ssgtzd_curl)
+include $(BUILD_PREBUILT)
+
 # 本机复用 API 33 的原厂 vendor CIL；它仍拥有 /class/udc 和
 # /power/mem_sleep 的 genfscon。新版 202504 标签会与这些规则冲突。
 # 覆盖安装版本文件，保持 libgenfslabelsversion 对旧 vendor 的 202404 行为。

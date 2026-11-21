@@ -229,6 +229,17 @@
       ]
     },
     {
+      "path": "vendor/bin/ssgtzd",
+      "sha256": "fff4d028c193e072d29cf2c37bbd48c967b2d43d40f33c35ba22746e42bef323",
+      "fixed_sha256": "43f22bf94b28a1073cb00dbe2358ab888c6cf34fc7277452a6cae2bee0b175f2",
+      "add_needed": [],
+      "replace_needed": {
+        "libcrypto.so": "libcrypto-v33.so",
+        "libcurl.so": "libcurl-ssgtzd-v33.so"
+      },
+      "reference": "https://review.lineageos.org/c/LineageOS/android_hardware_lineage_compat/+/514289"
+    },
+    {
       "path": "vendor/lib64/libagm_mixer_plugin.so",
       "sha256": "7e2bc0c31802c4f2fe7959080f89aeb3e7692f7b043d3ab1052245ff2fd5246f",
       "fixed_sha256": "5179ae38783f83b9c8d1b1c7bd0f2f022fcc359fb56e706dfc8b0cbae863195c",
