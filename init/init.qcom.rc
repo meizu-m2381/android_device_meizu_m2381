@@ -357,6 +357,13 @@ on post-fs-data
     mkdir /dev/socket/location/ehub 0770 gps gps
     mkdir /dev/socket/location/dgnss 0770 gps gps
 
+    # QCC-V waits for these directories before registering the SDK service used by XTRA.
+    mkdir /data/vendor/qcc 0770 system system
+    mkdir /data/vendor/qcc/down 0770 system system
+    mkdir /data/vendor/qcc/down/101 0770 system system
+    mkdir /data/vendor/qcc/decoded_sessions 0770 system system
+    mkdir /data/vendor/qcc/up 0770 system system
+
     #Create directories for wifihal services
     mkdir /dev/socket/wifihal 0770 wifi wifi
     chmod 2770 /dev/socket/wifihal
