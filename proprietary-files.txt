@@ -1685,7 +1685,6 @@ vendor/bin/hostapd_cli
 vendor/bin/hw/android.hardware.atrace@1.0-service
 vendor/bin/hw/android.hardware.audio.service_64
 vendor/bin/hw/android.hardware.bluetooth@1.1-service-qti
-vendor/bin/hw/android.hardware.boot@1.2-service
 vendor/bin/hw/android.hardware.camera.provider@2.4-external-service
 vendor/bin/hw/android.hardware.cas@1.2-service
 vendor/bin/hw/android.hardware.drm-service.clearkey
@@ -1697,7 +1696,6 @@ vendor/bin/hw/android.hardware.gnss-aidl-service-qti
 vendor/bin/hw/android.hardware.keymaster@4.0-service-qti
 vendor/bin/hw/android.hardware.keymaster@4.0-strongbox-service-qti
 vendor/bin/hw/android.hardware.media.omx@1.0-service
-vendor/bin/hw/android.hardware.power-service
 vendor/bin/hw/android.hardware.security.keymint-service-qti
 vendor/bin/hw/android.hardware.security.keymint-service-spu-qti
 vendor/bin/hw/android.hardware.sensors-service.multihal
@@ -2184,7 +2182,6 @@ vendor/etc/init.qti.fm.sh
 vendor/etc/init/android.hardware.atrace@1.0-service.rc
 vendor/etc/init/android.hardware.audio.service_64.rc
 vendor/etc/init/android.hardware.bluetooth@1.1-service-qti.rc
-vendor/etc/init/android.hardware.boot@1.2-service.rc
 vendor/etc/init/android.hardware.camera.provider@2.4-external-service.rc
 vendor/etc/init/android.hardware.cas@1.2-service.rc
 vendor/etc/init/android.hardware.drm-service.clearkey.rc
@@ -2194,7 +2191,6 @@ vendor/etc/init/android.hardware.gatekeeper@1.0-service-qti.rc
 vendor/etc/init/android.hardware.gnss-aidl-service-qti.rc
 vendor/etc/init/android.hardware.identity-service-qti.rc
 vendor/etc/init/android.hardware.media.omx@1.0-service.rc
-vendor/etc/init/android.hardware.power-service.rc
 vendor/etc/init/android.hardware.security.keymint-service-qti.rc
 vendor/etc/init/android.hardware.sensors-service-multihal.rc
 vendor/etc/init/android.hardware.thermal@2.0-service.qti-v2.rc
@@ -2605,7 +2601,6 @@ vendor/etc/ueventd.rc
 vendor/etc/ufs_ffu_firmware.bin
 vendor/etc/vintf/compatibility_matrix.xml
 vendor/etc/vintf/manifest/android.hardware.atrace@1.0-service.xml
-vendor/etc/vintf/manifest/android.hardware.boot@1.2.xml
 vendor/etc/vintf/manifest/android.hardware.cas@1.2-service.xml
 vendor/etc/vintf/manifest/android.hardware.drm-service.clearkey.xml
 vendor/etc/vintf/manifest/android.hardware.drm-service.xml

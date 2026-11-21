@@ -63,6 +63,7 @@ class Vibrator final : public BnVibrator {
     }
     ndk::ScopedAStatus getSupportedEffects(std::vector<Effect>* result) override {
         *result = {Effect::CLICK, Effect::TICK, Effect::HEAVY_CLICK, Effect::TEXTURE_TICK};
+        if (compositionAvailable_) result->push_back(Effect::DOUBLE_CLICK);
         return ndk::ScopedAStatus::ok();
     }
     ndk::ScopedAStatus getSupportedPrimitives(std::vector<CompositePrimitive>* result) override {
@@ -84,6 +85,30 @@ class Vibrator final : public BnVibrator {
                              const std::shared_ptr<IVibratorCallback>& callback,
                              int32_t* durationMs) override {
         if (callback) return unsupported();
+        if (effect == Effect::DOUBLE_CLICK) {
+            if (!compositionAvailable_) return unsupported();
+            float scale;
+            switch (strength) {
+                case EffectStrength::LIGHT: scale = 0.5f; break;
+                case EffectStrength::MEDIUM: scale = 0.75f; break;
+                case EffectStrength::STRONG: scale = 1.0f; break;
+                default: return unsupported();
+            }
+            // The device has a real composition backend: advertise and perform
+            // two clicks instead of relying on a framework waveform fallback.
+            CompositeEffect click;
+            click.primitive = CompositePrimitive::CLICK;
+            click.scale = scale;
+            click.delayMs = 0;
+            CompositeEffect second = click;
+            second.delayMs = 100;
+            auto status = compose({click, second}, nullptr);
+            if (status.isOk()) {
+                *durationMs = 2 * meizu::primitiveDuration(CompositePrimitive::CLICK) +
+                              second.delayMs + kEffectCompletionMs;
+            }
+            return status;
+        }
         int32_t waveform;
         switch (effect) {
             case Effect::TEXTURE_TICK: waveform = 8; break;

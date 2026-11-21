@@ -5,6 +5,7 @@
 #include <android/binder_manager.h>
 #include <android/binder_process.h>
 
+#include <algorithm>
 #include <chrono>
 #include <condition_variable>
 #include <cmath>
@@ -236,8 +237,9 @@ int main() {
                   caps == (IVibrator::CAP_AMPLITUDE_CONTROL | IVibrator::CAP_COMPOSE_EFFECTS),
           "capabilities match implemented APIs");
     std::vector<Effect> effects;
-    check(vibrator->getSupportedEffects(&effects).isOk() && effects.size() == 4,
-          "four supported UI effects");
+    check(vibrator->getSupportedEffects(&effects).isOk() && effects.size() == 5 &&
+                  std::find(effects.begin(), effects.end(), Effect::DOUBLE_CLICK) != effects.end(),
+          "five supported UI effects include real double click");
     std::vector<CompositePrimitive> primitives;
     check(vibrator->getSupportedPrimitives(&primitives).isOk() && primitives.size() == 9,
           "all nine composition primitives advertised");
@@ -318,7 +320,20 @@ int main() {
     std::this_thread::sleep_for(60ms);
     check(idle(), "explicit cancellation leaves chip idle");
     int32_t unsupportedDuration = 0;
-    check(!vibrator->perform(Effect::DOUBLE_CLICK, EffectStrength::STRONG, nullptr,
+    for (const auto strength : strengths) {
+        int32_t duration = 0;
+        check(vibrator->perform(Effect::DOUBLE_CLICK, strength, nullptr, &duration).isOk() &&
+                      duration > 100 && duration < 500,
+              "double click uses two finite primitives and reports completion");
+        std::this_thread::sleep_for(std::chrono::milliseconds(duration + 100));
+        check(idle(), "double click completes without caller off");
+    }
+    check(vibrator->perform(Effect::DOUBLE_CLICK, EffectStrength::STRONG, nullptr,
+                            &unsupportedDuration).isOk(), "double click starts before cancellation");
+    check(vibrator->off().isOk(), "double click cancellation accepted");
+    std::this_thread::sleep_for(250ms);
+    check(idle(), "canceled double click cannot restart its second pulse");
+    check(!vibrator->perform(Effect::THUD, EffectStrength::STRONG, nullptr,
                              &unsupportedDuration).isOk(),
           "unimplemented effect rejected for framework fallback");
     check(vibrator->off().isOk(), "final off");

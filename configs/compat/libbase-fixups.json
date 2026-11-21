@@ -184,6 +184,17 @@
           "count": 1
         }
       ]
+    },
+    {
+      "path": "vendor/bin/slim_daemon",
+      "sha256": "0fe6cce69d9d8b739898b3a091bd4bad6b60cfb9143e1a53a9de493b1e7f1cc1",
+      "fixed_sha256": "438bd3be0be0983fea22b339aafb2fbed266135bd501c4904eee6a69bbb162d2",
+      "add_needed": [
+        "libemutls_get_address.so"
+      ],
+      "symbols": [
+        "__emutls_get_address"
+      ]
     }
   ]
 }

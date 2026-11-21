@@ -709,10 +709,7 @@ service mlid /vendor/bin/mlid
     group gps
     socket mlid stream 0666 gps gps
 
-service loc_launcher /system/vendor/bin/loc_launcher
-    class late_start
-    user gps
-    group gps
+# loc_launcher is defined by /vendor/etc/init/loc-launcher.rc.
 
 service qcom-sh /vendor/bin/init.qcom.sh
     class late_start
@@ -837,11 +834,7 @@ service vm_bms /vendor/bin/vm_bms
     group root
     disabled
 
-service vendor.msm_irqbalance /vendor/bin/msm_irqbalance -f /system/vendor/etc/msm_irqbalance.conf
-    class core
-    user root
-    group root
-    disabled
+# vendor.msm_irqbalance is defined by the imported init.qti.kernel.rc.
 
 service vendor.msm_irqbal_lb /vendor/bin/msm_irqbalance -f /system/vendor/etc/msm_irqbalance_little_big.conf
     class core
@@ -893,11 +886,7 @@ service poweroffhandler /system/vendor/bin/poweroffhandler
     disabled
     oneshot
 
-service time_daemon /vendor/bin/time_daemon
-    class main
-    user system
-    group system
-    capabilities SYS_TIME
+# time_daemon (including SYS_TIME) is defined by init.time_daemon.rc.
 
 # Set vendor-ril lib path based on Meta version
 on property:vendor.rild.libpath=*

@@ -176,7 +176,7 @@ PRODUCT_COPY_FILES += \
 # （proprietary/vendor/bin/hw 与 lib64/hw 均有对应文件）。源码侧显示 HAL 依赖
 # 未公开的内核 uapi 头（display/drm/sde_drm.h），因此不编译。
 
-# Dirty hack for slim_daemon and others
+# LLVM emulated TLS used by the pinned SLIM compatibility copy.
 PRODUCT_PACKAGES += \
     libemutls_get_address
 
@@ -306,10 +306,9 @@ PRODUCT_PACKAGES += \
     libnetfilter_conntrack \
     libnfnetlink
 
-# NFC
-PRODUCT_PACKAGES += \
-    android.hardware.nfc-service.nxp \
-    com.android.nfc_extras
+# NFC: the stock HIDL service owns nq-nci and the vendor eSE extensions.
+# Do not start a second source AIDL controller stack beside it.
+PRODUCT_PACKAGES += com.android.nfc_extras
 # nqnfcinfo 由 vendor blobs 提供 (mz_vendor_bin_nqnfcinfo，已在 m2381-vendor.mk)。
 # 源码版依赖魅族未公开的内核头 linux/nfc/nfcinfo.h，已移出源码树。
 
@@ -428,8 +427,8 @@ PRODUCT_COPY_FILES += \
     frameworks/native/data/etc/android.hardware.telephony.mbms.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.telephony.mbms.xml
 
 # Thermal
-PRODUCT_PACKAGES += \
-    android.hardware.thermal-service.qti
+# Stock HIDL Thermal is also used by composer/perf/limits clients. Keep its
+# hardware thresholds under one owner instead of starting a second AIDL HAL.
 
 PRODUCT_COPY_FILES += \
     frameworks/native/data/etc/android.hardware.touchscreen.multitouch.jazzhand.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.touchscreen.multitouch.jazzhand.xml
