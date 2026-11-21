@@ -2205,7 +2205,6 @@ vendor/etc/init/dpmQmiMgr.rc
 vendor/etc/init/feature_enabler_client.rc
 vendor/etc/init/fix.1347671.rc
 vendor/etc/init/hw/init.qcom.factory.rc
-vendor/etc/init/hw/init.qcom.rc
 vendor/etc/init/hw/init.qti.kernel.rc
 vendor/etc/init/hw/init.qti.ufs.rc
 vendor/etc/init/hw/init.target.rc
