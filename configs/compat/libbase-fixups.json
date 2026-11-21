@@ -227,6 +227,36 @@
           "reason": "Disable propagation without forgetting the outstanding kernel request"
         }
       ]
+    },
+    {
+      "path": "vendor/lib64/libagm_mixer_plugin.so",
+      "sha256": "7e2bc0c31802c4f2fe7959080f89aeb3e7692f7b043d3ab1052245ff2fd5246f",
+      "fixed_sha256": "5179ae38783f83b9c8d1b1c7bd0f2f022fcc359fb56e706dfc8b0cbae863195c",
+      "add_needed": [],
+      "reference": "https://github.com/LineageOS/android_external_tinyalsa/commit/ea4778be27ae5d933cf931617b4b9c24f40a2e8b",
+      "offset_replacements": [
+        {
+          "offset": "0x62a0",
+          "before_hex": "01078052",
+          "after_hex": "010c8052",
+          "reason": "将 mixer_plugin 的 calloc 大小由 56 扩为 96 字节，容纳新版 tinyalsa 在偏移 52 追加的 40 字节互斥锁；保留原有字段和事件同步"
+        }
+      ]
+    },
+    {
+      "path": "vendor/lib/libagm_mixer_plugin.so",
+      "sha256": "740b9d4aa73f73b28a0e45cf7c2badbb49af37b8a78167ad4884a5a5a4642f13",
+      "fixed_sha256": "4d34b54456500935119c529c036d6f1e805e6bc63a0cc9ad795c78d18290ec30",
+      "add_needed": [],
+      "reference": "https://github.com/LineageOS/android_external_tinyalsa/commit/ea4778be27ae5d933cf931617b4b9c24f40a2e8b",
+      "offset_replacements": [
+        {
+          "offset": "0x2236",
+          "before_hex": "2021",
+          "after_hex": "2421",
+          "reason": "将 ARM mixer_plugin 的 calloc 大小由 32 扩为 36 字节，容纳偏移 32 追加的 4 字节互斥锁；Thumb 地址 0x3236 对应文件偏移 0x2236"
+        }
+      ]
     }
   ]
 }
