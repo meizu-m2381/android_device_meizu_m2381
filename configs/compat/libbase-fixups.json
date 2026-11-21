@@ -195,6 +195,38 @@
       "symbols": [
         "__emutls_get_address"
       ]
+    },
+    {
+      "path": "vendor/lib64/libsdmdal.so",
+      "sha256": "a0dde3f847e59697c8ef3853f5e2666f04b60f510106149284d4422005f5612b",
+      "fixed_sha256": "f32d5a8f68c3fc0532803c7dd515c037f95da1ae70d3e2c21ee366ca33bfa11a",
+      "add_needed": [],
+      "offset_replacements": [
+        {
+          "offset": "0x4f580",
+          "before_hex": "689200f9",
+          "after_hex": "1f2003d5",
+          "reason": "Keep pending request marked until its events have been drained"
+        },
+        {
+          "offset": "0x4f584",
+          "before_hex": "89010034",
+          "after_hex": "0c000014",
+          "reason": "Do not register a new request before drmHandleEvent"
+        },
+        {
+          "offset": "0x4f64c",
+          "before_hex": "a3020054",
+          "after_hex": "1f2003d5",
+          "reason": "After draining, always rearm once if enabled"
+        },
+        {
+          "offset": "0x52720",
+          "before_hex": "08f97f92",
+          "after_hex": "1f2003d5",
+          "reason": "Disable propagation without forgetting the outstanding kernel request"
+        }
+      ]
     }
   ]
 }

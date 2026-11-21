@@ -87,6 +87,12 @@ Flyme 的 GPIO on_off 完整通路，因此不能宣称全部机械手感完全�
 
 ## Tiktap 组合后端
 
+后端可用时也提供标准 DOUBLE_CLICK：两次 CLICK 原语，中间延迟 100 ms，
+LIGHT/MEDIUM/STRONG 相对幅度为 0.5/0.75/1.0；返回包含启动余量的有限完成时间。
+off 或新请求会取消整个时间线，等待中的第二次点击不会恢复播放。
+这避免 Android 17 为不支持的双击插入尚未解析默认幅度的后备波形；
+setAmplitude 仍严格拒绝 -1.0。系统缓存支持列表，更新后需新启动验证。
+
 原厂算法和 AW8697 RTP 接口的还原及真机证据见 manifest 仓
 `docs/tiktap-composition.md`。仅在算法库、proc 节点可访问且原厂 Tiktap HIDL
 未运行时报告 CAP_COMPOSE_EFFECTS；设备 init 覆盖并禁用原厂 HIDL 服务，避免
@@ -146,7 +152,7 @@ adb shell /data/local/tmp/m2381-vibrator-check
 ```
 
 测试程序只用于 root 真机诊断，不列入 PRODUCT_PACKAGES。它通过实际 Binder HAL
-检查四效果三强度、RAM 编号、循环标志、自动停止、时间波形振幅、抢占、旧计时器
+检查四个 RAM 效果三强度、组合双击三强度及取消、RAM 编号、循环标志、自动停止、时间波形振幅、抢占、旧计时器
 取消及非法参数。读取 GO/GLB_STATE 判断硬件待机，不以软件 `state` 冒充实际停止。
 测试期间会播放短振动，应避免其他应用同时触发振动。
 当前诊断还覆盖九个原语的完成回调、THUD/SPIN 混合时间线及满长度 SPIN 取消、

@@ -62,6 +62,20 @@ def configure(aosp, device, vendor, apply=False):
             for index, (entry, source, output) in enumerate(plan):
                 fixed = Path(temporary) / str(index)
                 fixed.write_bytes(source.read_bytes())
+                data = bytearray(fixed.read_bytes())
+                touched = set()
+                for replacement in entry.get('offset_replacements', []):
+                    offset = int(replacement['offset'], 0)
+                    before = bytes.fromhex(replacement['before_hex'])
+                    after = bytes.fromhex(replacement['after_hex'])
+                    positions = set(range(offset, offset + len(before)))
+                    if (not before or len(before) != len(after) or offset < 0 or
+                            offset + len(before) > len(data) or touched & positions or
+                            data[offset:offset + len(before)] != before):
+                        raise ValueError(f'Unexpected pinned offset replacement: {source}')
+                    data[offset:offset + len(before)] = after
+                    touched.update(positions)
+                fixed.write_bytes(data)
                 for replacement in entry.get('binary_replacements', []):
                     before = replacement['before'].encode('ascii')
                     after = replacement['after'].encode('ascii')
