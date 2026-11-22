@@ -11,6 +11,7 @@
 #include <cerrno>
 #include <chrono>
 #include <mutex>
+#include <optional>
 #include <thread>
 
 extern char** environ;
@@ -21,7 +22,7 @@ constexpr char kComposerClient[] = "/vendor/bin/m2381-display-dimming";
 
 int waitForComposerClient(pid_t pid) {
     using namespace std::chrono_literals;
-    const auto deadline = std::chrono::steady_clock::now() + 1500ms;
+    const auto deadline = std::chrono::steady_clock::now() + 3000ms;
     int status = 0;
     do {
         const pid_t waited = waitpid(pid, &status, WNOHANG);
@@ -41,15 +42,18 @@ class AntiFlicker final : public BnAntiFlicker {
   public:
     ndk::ScopedAStatus getEnabled(bool* enabled) override {
         std::lock_guard lock(mutex_);
-        *enabled = enabled_;
+        *enabled = enabled_.value_or(false);
         return ndk::ScopedAStatus::ok();
     }
 
     ndk::ScopedAStatus setEnabled(bool enabled) override {
         std::lock_guard lock(mutex_);
+        if (enabled_ == enabled) return ndk::ScopedAStatus::ok();
         char on[] = "on";
         char off[] = "off";
-        char* const argv[] = {const_cast<char*>(kComposerClient), enabled ? on : off, nullptr};
+        char reset[] = "reset";
+        char* mode = enabled ? on : (enabled_.has_value() ? off : reset);
+        char* const argv[] = {const_cast<char*>(kComposerClient), mode, nullptr};
         pid_t pid;
         const int error = posix_spawn(&pid, kComposerClient, nullptr, nullptr, argv, environ);
         if (error != 0) {
@@ -67,7 +71,7 @@ class AntiFlicker final : public BnAntiFlicker {
 
   private:
     std::mutex mutex_;
-    bool enabled_ = false;
+    std::optional<bool> enabled_;
 };
 }  // namespace
 
