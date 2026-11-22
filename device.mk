@@ -173,14 +173,12 @@ PRODUCT_COPY_FILES += \
     frameworks/native/data/etc/android.hardware.camera.raw.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.camera.raw.xml
 
 # Display
-# Qualcomm digital dimming needs a measured brightness curve and minimum DBV
-# for this BOE panel. Only declare AntiFlicker in builds with that calibration.
+# Qualcomm digital dimming uses the M2381 BOE panel profile and the
+# LiveDisplay AntiFlicker service to switch the Composer dimming path.
 M2381_DIMMING_CALIBRATION := backlight_calib_meizu_amoled_cmd_mode_dsi_boe_panel_with_DSC.xml
-ifneq ($(wildcard $(LOCAL_PATH)/configs/display/$(M2381_DIMMING_CALIBRATION)),)
 PRODUCT_PACKAGES += vendor.lineage.livedisplay-service.m2381 m2381_vendor_service_contexts
 PRODUCT_COPY_FILES += \
     $(LOCAL_PATH)/configs/display/$(M2381_DIMMING_CALIBRATION):$(TARGET_COPY_OUT_VENDOR)/etc/display/$(M2381_DIMMING_CALIBRATION)
-endif
 
 PRODUCT_COPY_FILES += \
     $(LOCAL_PATH)/configs/display/display_id_4630946981250209410.xml:$(TARGET_COPY_OUT_PRODUCT)/etc/displayconfig/display_id_4630946981250209410.xml
