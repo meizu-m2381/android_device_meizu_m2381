@@ -6,4 +6,5 @@ $(call inherit-product, vendor/custom/config/common_full_phone.mk)
 # Assign final identity in this product; inherited single-value properties use
 # first-parent precedence and otherwise keep full_base's generic device.
 include device/meizu/m2381/m2381-identity.mk
+PRODUCT_PACKAGES += m2381_google_extservices
 PRODUCT_NAME := custom_m2381

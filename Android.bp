@@ -7,6 +7,27 @@
 soong_namespace {
 }
 
+// The GMS prebuilt is already a CAPEX, so PRODUCT_COMPRESSED_APEX cannot
+// prevent it from needing /data at first boot.
+java_genrule {
+    name: "m2381_extservices_apex_file",
+    srcs: ["//vendor/pixel/gms/common:com.google.android.extservices"],
+    tools: ["deapexer"],
+    out: ["com.google.android.extservices.apex"],
+    cmd: "$(location deapexer) decompress --copy-if-uncompressed --input $(in) --output $(out)",
+}
+
+prebuilt_apex {
+    name: "m2381_google_extservices",
+    src: ":m2381_extservices_apex_file",
+    filename: "com.google.android.extservices.m2381.apex",
+    apps: ["GoogleExtServices"],
+    overrides: [
+        "com.android.extservices",
+        "com.google.android.extservices",
+    ],
+}
+
 // EGL's explicit egl/ path and DT_NEEDED must resolve to the same inode.
 install_symlink {
     name: "m2381_adreno_egl_alias_32",
