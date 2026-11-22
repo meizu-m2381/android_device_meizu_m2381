@@ -1,0 +1,7 @@
+# SPDX-License-Identifier: Apache-2.0
+
+service vendor.m2381.livedisplay /vendor/bin/hw/vendor.lineage.livedisplay-service.m2381
+    class hal
+    user system
+    group system
+    interface aidl vendor.lineage.livedisplay.IAntiFlicker/default

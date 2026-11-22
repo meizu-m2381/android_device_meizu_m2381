@@ -1,0 +1,21 @@
+// SPDX-License-Identifier: Apache-2.0
+
+cc_binary {
+    name: "vendor.lineage.livedisplay-service.m2381",
+    vendor: true,
+    relative_install_path: "hw",
+    srcs: ["AntiFlicker.cpp"],
+    init_rc: ["livedisplay-m2381.rc"],
+    vintf_fragments: ["livedisplay-m2381.xml"],
+    required: ["m2381-display-dimming"],
+    shared_libs: ["libbase", "libbinder_ndk", "vendor.lineage.livedisplay-V1-ndk"],
+    cflags: ["-Wall", "-Wextra", "-Werror"],
+}
+
+cc_binary {
+    name: "m2381-display-dimming",
+    vendor: true,
+    srcs: ["DisplayDimming.cpp"],
+    shared_libs: ["libbase", "libbinder", "libutils"],
+    cflags: ["-Wall", "-Wextra", "-Werror"],
+}

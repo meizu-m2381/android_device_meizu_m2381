@@ -1,0 +1,22 @@
+type vendor_m2381_antiflicker, domain;
+type vendor_m2381_antiflicker_exec, exec_type, vendor_file_type, file_type;
+type vendor_m2381_dimming_client, domain;
+type vendor_m2381_dimming_client_exec, exec_type, vendor_file_type, file_type;
+type vendor_m2381_antiflicker_service, hal_service_type, service_manager_type;
+
+init_daemon_domain(vendor_m2381_antiflicker)
+binder_use(vendor_m2381_antiflicker)
+add_service(vendor_m2381_antiflicker, vendor_m2381_antiflicker_service)
+allow system_server vendor_m2381_antiflicker_service:service_manager find;
+binder_call(system_server, vendor_m2381_antiflicker)
+allow system_app vendor_m2381_antiflicker_service:service_manager find;
+binder_call(system_app, vendor_m2381_antiflicker)
+allow platform_app vendor_m2381_antiflicker_service:service_manager find;
+binder_call(platform_app, vendor_m2381_antiflicker)
+
+domain_auto_trans(vendor_m2381_antiflicker, vendor_m2381_dimming_client_exec, vendor_m2381_dimming_client)
+allow vendor_m2381_antiflicker vendor_m2381_dimming_client:process sigkill;
+allow vendor_m2381_dimming_client vendor_m2381_antiflicker:fd use;
+vndbinder_use(vendor_m2381_dimming_client)
+allow vendor_m2381_dimming_client vendor_qdisplay_service:service_manager find;
+binder_call(vendor_m2381_dimming_client, hal_graphics_composer_default)

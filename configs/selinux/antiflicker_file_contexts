@@ -1,0 +1,2 @@
+/(vendor|system/vendor)/bin/hw/vendor\.lineage\.livedisplay-service\.m2381 u:object_r:vendor_m2381_antiflicker_exec:s0
+/(vendor|system/vendor)/bin/m2381-display-dimming u:object_r:vendor_m2381_dimming_client_exec:s0
