@@ -48,22 +48,22 @@ android::status_t setDimming(std::string_view mode) {
         return status;
     }
 
-    // The composer applies PCC and the backlight LUT in separate updates. Set
-    // the floor while dimming is disabled, then toggle once so the panel sees a
-    // single color/backlight transition instead of a series of visible pulses.
+    // The composer applies PCC and the backlight LUT in separate updates. Enable
+    // dimming before raising its floor, otherwise the enable transaction resets
+    // the floor to the normal value.
     if (enabled) {
-        auto status = sendCommand(service, kSetDimmingMinBl, kAntiFlickerMinimumBacklight);
+        auto status = sendCommand(service, kSetDimmingEnable, 1);
         if (status == android::OK) {
             std::this_thread::sleep_for(std::chrono::milliseconds(50));
-            status = sendCommand(service, kSetDimmingEnable, 1);
+            status = sendCommand(service, kSetDimmingMinBl, kAntiFlickerMinimumBacklight);
         }
         return status;
     }
 
-    auto status = sendCommand(service, kSetDimmingEnable, 0);
+    auto status = sendCommand(service, kSetDimmingMinBl, kNormalMinimumBacklight);
     if (status == android::OK) {
         std::this_thread::sleep_for(std::chrono::milliseconds(50));
-        status = sendCommand(service, kSetDimmingMinBl, kNormalMinimumBacklight);
+        status = sendCommand(service, kSetDimmingEnable, 0);
     }
     return status;
 }
