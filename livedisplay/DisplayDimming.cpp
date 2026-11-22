@@ -5,7 +5,6 @@
 #include <binder/Parcel.h>
 #include <binder/ProcessState.h>
 
-#include <array>
 #include <chrono>
 #include <string_view>
 #include <thread>
@@ -15,13 +14,8 @@ constexpr uint32_t kSetDimmingEnable = 54;
 constexpr uint32_t kSetDimmingMinBl = 55;
 constexpr int32_t kPrimaryDisplay = 0;
 constexpr char kVendorBinder[] = "/dev/vndbinder";
-constexpr auto kStepInterval = std::chrono::milliseconds(45);
-// Hold each minimum for at least one frame at the rates used on the lock screen.
-// Above the normal minimum, limit the change to about 13% per step.
-constexpr std::array kMinimumBacklightSteps = {
-    1, 15, 17, 19, 21, 24, 27, 30, 34, 38, 43, 48, 54, 61, 69, 78,
-    88, 99, 112, 126, 142, 160, 180, 203, 229, 258, 291, 328, 370, 400,
-};
+constexpr int32_t kNormalMinimumBacklight = 1;
+constexpr int32_t kAntiFlickerMinimumBacklight = 400;
 
 android::status_t sendCommand(const android::sp<android::IBinder>& service, uint32_t code,
                               int32_t value) {
@@ -47,27 +41,31 @@ android::status_t setDimming(std::string_view mode) {
     if (!service) return android::NAME_NOT_FOUND;
 
     const bool enabled = mode == "on";
-    if (mode == "reset") return sendCommand(service, kSetDimmingEnable, 0);
+    if (mode == "reset") {
+        auto status = sendCommand(service, kSetDimmingEnable, 0);
+        if (status == android::OK) status = sendCommand(service, kSetDimmingMinBl,
+                                                         kNormalMinimumBacklight);
+        return status;
+    }
 
+    // The composer applies PCC and the backlight LUT in separate updates. Set
+    // the floor while dimming is disabled, then toggle once so the panel sees a
+    // single color/backlight transition instead of a series of visible pulses.
     if (enabled) {
-        auto status = sendCommand(service, kSetDimmingEnable, 1);
-        if (status != android::OK) return status;
-    }
-    // Composer applies PCC and the backlight LUT through separate updates. Limit
-    // the visible luminance change while these updates may span different frames.
-    for (size_t i = 1; i < kMinimumBacklightSteps.size(); ++i) {
-        std::this_thread::sleep_for(kStepInterval);
-        const size_t level = enabled ? i : kMinimumBacklightSteps.size() - 1 - i;
-        const auto status = sendCommand(service, kSetDimmingMinBl, kMinimumBacklightSteps[level]);
-        if (status != android::OK) {
-            if (enabled) sendCommand(service, kSetDimmingEnable, 0);
-            return status;
+        auto status = sendCommand(service, kSetDimmingMinBl, kAntiFlickerMinimumBacklight);
+        if (status == android::OK) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(50));
+            status = sendCommand(service, kSetDimmingEnable, 1);
         }
+        return status;
     }
-    if (enabled) return android::OK;
 
-    std::this_thread::sleep_for(kStepInterval);
-    return sendCommand(service, kSetDimmingEnable, 0);
+    auto status = sendCommand(service, kSetDimmingEnable, 0);
+    if (status == android::OK) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(50));
+        status = sendCommand(service, kSetDimmingMinBl, kNormalMinimumBacklight);
+    }
+    return status;
 }
 }  // namespace
 
