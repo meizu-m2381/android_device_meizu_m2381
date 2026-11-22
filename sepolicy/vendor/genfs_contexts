@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 genfscon sysfs /kernel/display_drivers/aod_light_mode u:object_r:vendor_sysfs_m2381_aod:s0
+genfscon sysfs /devices/platform/mx-gs/gesture_control u:object_r:vendor_sysfs_m2381_gesture:s0
 genfscon sysfs /devices/platform/soc/soc:qcom,dsi-display-primary/display/aod u:object_r:vendor_sysfs_m2381_aod:s0
 genfscon sysfs /kernel/display_drivers/hbm u:object_r:vendor_sysfs_fingerprint_hbm:s0
 genfscon sysfs /kernel/display_drivers/hbm_ready_status u:object_r:vendor_sysfs_fingerprint_hbm_ready:s0

@@ -1,3 +1,4 @@
 # SPDX-License-Identifier: Apache-2.0
 allow vendor_init vendor_sysfs_fingerprint_hbm:file { rw_file_perms setattr };
 allow vendor_init vendor_sysfs_fingerprint_hbm_ready:file { getattr setattr };
+allow vendor_init vendor_sysfs_m2381_gesture:file { getattr setattr };

@@ -11,3 +11,4 @@
 /(vendor|system/vendor)/bin/hw/android\.hardware\.power-service-qti u:object_r:hal_power_default_exec:s0
 /(vendor|system/vendor)/bin/hw/vendor\.meizu\.ir@1\.0-service u:object_r:hal_ir_default_exec:s0
 /dev/0:0:0:0 u:object_r:vendor_bsg_device:s0
+/(vendor|system/vendor)/bin/mz_fp_gesture_init u:object_r:vendor_m2381_gesture_exec:s0
