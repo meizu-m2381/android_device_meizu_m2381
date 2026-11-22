@@ -79,8 +79,10 @@ Flyme 的 GPIO on_off 完整通路，因此不能宣称全部机械手感完全�
   loop 为 0，由芯片自然结束。30 ms 是向 framework 返回的完成预算，包含实测
   约 8 ms 的异步 I2C 启动余量，不是将脉冲拉长到 30 ms。不能把它增到大于
   50 ms，否则该驱动会将 loop 设为 15，变成持续播放。
-- `on(timeout)` 显式恢复 1 号基础波形，避免通知继承上一个点击配置。
-  持续播放仍保留 monotonic timer、generation 取消和 init 异常停止保护。
+- `on(timeout)` 在 50 ms 以内使用 1 号基础波形单次播放。超过 50 ms 时驱动启用循环，
+  改选原厂 RAM 19（142 个样本，24 kHz 下约为 169 Hz 的一个周期）。
+  1 号波形每 15.6 ms 重复一次起振和衰减，循环时会产生明显的脉冲包络。
+  持续播放保留 monotonic timer、generation 取消和 init 异常停止保护。
   `on()` 是兼容时间/幅度波形接口，不等同于硬件预置效果。
 - 启动时由设备 init 将 `waveform` 节点权限设为 system:system 0660；沿用
   原厂 `vib_strength_sysfs` 标签和已有 HAL 写权限，不扩大其他域权限。

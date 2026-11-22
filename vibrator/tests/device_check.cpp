@@ -287,12 +287,17 @@ int main() {
         }
     }
 
-    // A continuous notification must not inherit the previous click waveform,
-    // and a following click must clear the continuous loop.
-    check(vibrator->on(200, nullptr).isOk(), "continuous vibration starts");
+    check(vibrator->on(50, nullptr).isOk(), "short timed vibration starts at driver threshold");
     std::this_thread::sleep_for(15ms);
-    check(sequence() == 1 && read("loop").find("seq1 loop: 0x0f") != std::string::npos,
-          "continuous playback resets waveform and enables loop");
+    check(sequence() == 1 && read("loop").find("seq1 loop: 0x00") != std::string::npos,
+          "short timed vibration selects the single-shot waveform");
+    check(vibrator->on(51, nullptr).isOk(), "continuous vibration starts above driver threshold");
+    std::this_thread::sleep_for(15ms);
+    check(sequence() == 19 && read("loop").find("seq1 loop: 0x0f") != std::string::npos,
+          "continuous playback loops the resonant waveform");
+    // Allow for the register dump in each gain check before testing preemption.
+    check(vibrator->on(1000, nullptr).isOk(), "continuous vibration starts for amplitude checks");
+    std::this_thread::sleep_for(15ms);
     check(vibrator->setAmplitude(0.25f).isOk() && gain() == 32, "quarter amplitude reaches chip");
     check(vibrator->setAmplitude(0.1f).isOk() && gain() == 12, "amplitude conversion truncates like Flyme");
     check(vibrator->setAmplitude(1.0f).isOk() && gain() == 128, "full amplitude uses stock baseline");

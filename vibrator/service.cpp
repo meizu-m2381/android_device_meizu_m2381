@@ -57,9 +57,11 @@ class Vibrator final : public BnVibrator {
         if (timeoutMs <= 0) return ndk::ScopedAStatus::fromExceptionCode(EX_ILLEGAL_ARGUMENT);
         if (callback) return unsupported();
         std::lock_guard<std::mutex> lock(mutex_);
-        // Reset the waveform after perform(): otherwise a notification can
-        // inherit the preceding click's waveform (and vice versa).
-        return startLocked(timeoutMs, kDefaultGain, kTimedWaveform);
+        // The driver loops RAM for requests over 50 ms. Use the firmware's
+        // single resonant cycle so the loop does not repeat a click envelope.
+        const int32_t waveform = timeoutMs > kSingleShotLimitMs ? kContinuousWaveform
+                                                               : kShortTimedWaveform;
+        return startLocked(timeoutMs, kDefaultGain, waveform);
     }
     ndk::ScopedAStatus getSupportedEffects(std::vector<Effect>* result) override {
         *result = {Effect::CLICK, Effect::TICK, Effect::HEAVY_CLICK, Effect::TEXTURE_TICK};
@@ -213,7 +215,9 @@ class Vibrator final : public BnVibrator {
     // attenuate each RAM effect a second time: its samples define its shape.
     static constexpr int32_t kMaxGain = 0x80;
     static constexpr int32_t kDefaultGain = 0x80;
-    static constexpr int32_t kTimedWaveform = 1;
+    static constexpr int32_t kSingleShotLimitMs = 50;
+    static constexpr int32_t kShortTimedWaveform = 1;
+    static constexpr int32_t kContinuousWaveform = 19;
     static constexpr int32_t kEffectCompletionMs = 30;
     static ndk::ScopedAStatus unsupported() {
         return ndk::ScopedAStatus::fromExceptionCode(EX_UNSUPPORTED_OPERATION);
