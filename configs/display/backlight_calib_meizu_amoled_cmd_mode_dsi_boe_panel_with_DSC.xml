@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='utf-8'?>
-<Calib_Data gamma="1.00" minimum_bl="400" max_bl="4095" max_os_bl="4095" hbm_mode_supported="0" pcc_thresh="1.00" version="1.1">
-  <!-- Stock BOE panel calibration used by the Composer digital-dimming path. -->
+<Calib_Data gamma="1.00" minimum_bl="400" max_bl="4095" max_os_bl="4095" hbm_mode_supported="0" pcc_thresh="0.00" version="1.1">
+  <!-- SDR luminance profile for the BOE panel with a trial DC floor. -->
   <linearized_bl>
     <value>0</value>
     <value>17</value>

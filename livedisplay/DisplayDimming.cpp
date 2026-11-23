@@ -36,11 +36,8 @@ android::status_t setDimming(std::string_view mode) {
     if (!service) return android::NAME_NOT_FOUND;
 
     const bool enabled = mode == "on";
-    // The stock calibration profile supplies the digital-dimming minimum and
-    // PCC threshold. Keep the transition atomic from the caller's point of
-    // view by changing only the Composer dimming status here. Sending a
-    // separate minimum-DBV command changes the panel backlight immediately
-    // and causes the visible flash that this feature is meant to avoid.
+    // The BOE profile supplies the floor and PCC threshold before the toggle.
+    // A separate minimum-DBV command would cause another LUT update.
     return sendCommand(service, kSetDimmingEnable, enabled ? 1 : 0);
 }
 }  // namespace
