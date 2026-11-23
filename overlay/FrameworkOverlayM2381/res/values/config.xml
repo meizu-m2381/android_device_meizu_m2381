@@ -60,7 +60,9 @@
     <item name="config_screenBrightnessDozeFloat" type="dimen" format="float">0.0629921</item>
     <item name="config_screenBrightnessSettingDefaultFloat" type="dimen" format="float">0.484958</item>
     <item name="config_screenBrightnessSettingMaximumFloat" type="dimen" format="float">1.0</item>
-    <item name="config_screenBrightnessSettingMinimumFloat" type="dimen" format="float">0.0</item>
+    <!-- At 13/4095, the BOE panel stays at its hardware minimum with anti-flicker
+         off and reaches a visually matching white level with it on. -->
+    <item name="config_screenBrightnessSettingMinimumFloat" type="dimen" format="float">0.003174603</item>
 
     <string name="config_dozeComponent" translatable="false">com.android.systemui/com.android.systemui.doze.DozeService</string>
     <!-- Meizu 20 Flyme 12.6 framework-res: physical pixels, centred hole. -->
