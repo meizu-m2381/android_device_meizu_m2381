@@ -3,6 +3,8 @@
 #include <aidl/vendor/lineage/livedisplay/BnAntiFlicker.h>
 #include <android-base/logging.h>
 #include <android/binder_manager.h>
+#include <android/binder_auto_utils.h>
+#include <android/binder_parcel.h>
 #include <android/binder_process.h>
 #include <spawn.h>
 #include <sys/wait.h>
@@ -19,6 +21,32 @@ extern char** environ;
 namespace {
 using aidl::vendor::lineage::livedisplay::BnAntiFlicker;
 constexpr char kComposerClient[] = "/vendor/bin/m2381-display-dimming";
+constexpr char kDisplayAuxService[] = "m2381_display_aux";
+constexpr transaction_code_t kBeginFade = FIRST_CALL_TRANSACTION + 1;
+constexpr transaction_code_t kFinishFade = FIRST_CALL_TRANSACTION + 2;
+
+ndk::SpAIBinder getDisplayAux() {
+    static const auto* binderClass = AIBinder_Class_define(
+            "meizu.display.IColorTransform", [](void* args) { return args; }, [](void*) {},
+            [](AIBinder*, transaction_code_t, const AParcel*, AParcel*) -> binder_status_t {
+                return STATUS_UNKNOWN_TRANSACTION;
+            });
+    ndk::SpAIBinder binder(AServiceManager_checkService(kDisplayAuxService));
+    if (!binder.get() || !AIBinder_associateClass(binder.get(), binderClass)) return {};
+    return binder;
+}
+
+bool fade(const ndk::SpAIBinder& display, transaction_code_t code) {
+    ndk::ScopedAParcel request;
+    ndk::ScopedAParcel reply;
+    ndk::ScopedAStatus status;
+    bool covered = true;
+    return AIBinder_prepareTransaction(display.get(), request.getR()) == STATUS_OK &&
+           AIBinder_transact(display.get(), code, request.getR(), reply.getR(), 0) == STATUS_OK &&
+           AParcel_readStatusHeader(reply.get(), status.getR()) == STATUS_OK && status.isOk() &&
+           (code != kBeginFade ||
+            (AParcel_readBool(reply.get(), &covered) == STATUS_OK && covered));
+}
 
 int waitForComposerClient(pid_t pid) {
     using namespace std::chrono_literals;
@@ -54,14 +82,20 @@ class AntiFlicker final : public BnAntiFlicker {
         char reset[] = "reset";
         char* mode = enabled ? on : (enabled_.has_value() ? off : reset);
         char* const argv[] = {const_cast<char*>(kComposerClient), mode, nullptr};
+        const auto display = enabled || enabled_.has_value() ? getDisplayAux() : ndk::SpAIBinder();
+        const bool switching = display.get() != nullptr;
+        if ((!switching && enabled_.has_value()) || (switching && !fade(display, kBeginFade))) {
+            LOG(ERROR) << "Cannot present the black frame";
+            return ndk::ScopedAStatus::fromServiceSpecificError(EIO);
+        }
         pid_t pid;
         const int error = posix_spawn(&pid, kComposerClient, nullptr, nullptr, argv, environ);
-        if (error != 0) {
-            LOG(ERROR) << "Cannot start composer client (" << error << ")";
-            return ndk::ScopedAStatus::fromServiceSpecificError(error);
+        const int result = error == 0 ? waitForComposerClient(pid) : error;
+        if (switching && !fade(display, kFinishFade)) {
+            LOG(ERROR) << "Cannot restore the display after switching";
         }
-        const int result = waitForComposerClient(pid);
         if (result != 0) {
+            LOG(ERROR) << "Composer client failed (" << result << ")";
             return ndk::ScopedAStatus::fromServiceSpecificError(result);
         }
 

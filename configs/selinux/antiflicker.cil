@@ -33,6 +33,8 @@
 (allow system_server_33_0 vendor_m2381_antiflicker (binder (call transfer)))
 (allow system_server_33_0 vendor_m2381_antiflicker (fd (use)))
 (allow vendor_m2381_antiflicker system_server_33_0 (binder (transfer)))
+(allow vendor_m2381_antiflicker m2381_display_aux_service (service_manager (find)))
+(allow vendor_m2381_antiflicker system_server_33_0 (binder (call)))
 (allow system_app_33_0 vendor_m2381_antiflicker_service (service_manager (find)))
 (allow system_app_33_0 vendor_m2381_antiflicker (binder (call transfer)))
 (allow system_app_33_0 vendor_m2381_antiflicker (fd (use)))

@@ -26,6 +26,7 @@ import java.io.PrintWriter;
 /** Exposes current framework transforms to the device's ALS compensation client. */
 public final class DisplayAuxService extends SystemService {
     private AodBrightnessController mAodBrightness;
+    private final AntiFlickerFade mAntiFlickerFade;
     private static final String DESCRIPTOR = "meizu.display.IColorTransform";
     private static final int[] LEVELS = {
         DisplayTransformManager.LEVEL_COLOR_MATRIX_NIGHT_DISPLAY,
@@ -38,6 +39,7 @@ public final class DisplayAuxService extends SystemService {
 
     public DisplayAuxService(Context context) {
         super(context);
+        mAntiFlickerFade = new AntiFlickerFade(context);
     }
 
     @Override
@@ -53,6 +55,28 @@ public final class DisplayAuxService extends SystemService {
             @Override
             protected boolean onTransact(int code, Parcel data, Parcel reply, int flags)
                     throws RemoteException {
+                if (code == IBinder.FIRST_CALL_TRANSACTION + 1
+                        || code == IBinder.FIRST_CALL_TRANSACTION + 2) {
+                    data.enforceInterface(DESCRIPTOR);
+                    if (Binder.getCallingUid() != Process.SYSTEM_UID) {
+                        throw new SecurityException("Only the device LiveDisplay service may fade");
+                    }
+                    data.enforceNoDataAvail();
+                    long identity = Binder.clearCallingIdentity();
+                    try {
+                        if (code == IBinder.FIRST_CALL_TRANSACTION + 1) {
+                            boolean black = mAntiFlickerFade.begin();
+                            reply.writeNoException();
+                            reply.writeBoolean(black);
+                        } else {
+                            mAntiFlickerFade.finish();
+                            reply.writeNoException();
+                        }
+                    } finally {
+                        Binder.restoreCallingIdentity(identity);
+                    }
+                    return true;
+                }
                 if (code != IBinder.FIRST_CALL_TRANSACTION) {
                     return super.onTransact(code, data, reply, flags);
                 }
