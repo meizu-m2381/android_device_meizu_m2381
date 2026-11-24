@@ -1,0 +1,18 @@
+#Copyright (c) 2019-2020 Qualcomm Technologies, Inc.
+#All Rights Reserved.
+#Confidential and Proprietary - Qualcomm Technologies, Inc.
+
+# device specific syscalls
+pselect6: 1
+eventfd2: 1
+sendto: 1
+recvfrom: 1
+_llseek: 1
+sysinfo: 1
+getcwd: 1
+getdents64: 1
+renameat2: 1
+fchmodat:1
+unlinkat:1
+getppid: 1
+uname: 1

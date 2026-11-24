@@ -6,5 +6,6 @@
 cc_library_shared {
     name: "qcodec2_shim",
     srcs: ["qcodec2_shim.c"],
+    shared_libs: ["libcodec2_vndk"],
     vendor: true,
 }

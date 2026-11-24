@@ -67,20 +67,6 @@
       ]
     },
     {
-      "path": "vendor/lib/libcodec2_hidl@1.0.so",
-      "sha256": "731f9cd68f140c29b49969a7fe88beef5fa8dc7ced279af92b3bb49b611850cb",
-      "fixed_sha256": "5aa00243df8432cfa06d9360b0b35da5043cf9cc95ca4c9d733781fcc2df3266",
-      "symbols": [
-        "_ZN7android4base15WriteStringToFdERKNSt3__112basic_stringIcNS1_11char_traitsIcEENS1_9allocatorIcEEEENS0_11borrowed_fdE"
-      ],
-      "previous_fixed_sha256": [
-        "d572c94daab097958e0e626c62e593adc8bc6275b812fa0fc74f526cf811c1fc"
-      ],
-      "replace_needed": {
-        "libstagefright_bufferqueue_helper.so": "libstagefright_bufferqueue_helper-v33.so"
-      }
-    },
-    {
       "path": "vendor/lib/nfc_nci.nqx.default.hw.so",
       "sha256": "41a28bee42ef3d27f36dcf8a71c81fb30ea089937e793d22fd5ad974a9af50fa",
       "fixed_sha256": "8ef836b1201700a30697e51f1ef38541664182c4a1177c960d9e49c2f4513c91",
@@ -114,14 +100,6 @@
       ]
     },
     {
-      "path": "vendor/lib64/libcodec2_hidl@1.0.so",
-      "sha256": "922fb1bcf7c8f7f3607e9afd9f980422db80f89daf63909d6b7e1bc3dab38df5",
-      "fixed_sha256": "b8bea6e353e72a37d725e5d9b9a8c83b0b1df64972f71dc0f61a37afcd29f8ec",
-      "symbols": [
-        "_ZN7android4base15WriteStringToFdERKNSt3__112basic_stringIcNS1_11char_traitsIcEENS1_9allocatorIcEEEENS0_11borrowed_fdE"
-      ]
-    },
-    {
       "path": "vendor/lib64/libqfp-service.so",
       "sha256": "696a97d02bff638a0186f21dce9b076d75ab56b00d21f904f30f8bd1d03e7a10",
       "fixed_sha256": "7970f51924829a11f7406ce0f9bae12d79d06df36d3d19ada30da59e04103777",
@@ -135,28 +113,6 @@
       "fixed_sha256": "5b9909c3ba7525041df68bccc1ad63344c2bf6338a0d527600ddc4b92046269c",
       "symbols": [
         "_ZN7android4base4TrimERKNSt3__112basic_stringIcNS1_11char_traitsIcEENS1_9allocatorIcEEEE"
-      ]
-    },
-    {
-      "path": "vendor/lib/libcodec2_vndk.so",
-      "sha256": "81c6288b9ff5acc4d5c6a0b204617f59f89e90a9c2a8a0091ae0ce54c2dd659e",
-      "fixed_sha256": "85c5d90fa7c97f9bb5081b51e762b2264e7231cce45647addc8a30266368058a",
-      "add_needed": [
-        "libui_shim.so"
-      ],
-      "symbols": [
-        "_ZN7android19GraphicBufferMapper4lockEPK13native_handlejRKNS_4RectEPPvPiS9_"
-      ]
-    },
-    {
-      "path": "vendor/lib64/libcodec2_vndk.so",
-      "sha256": "0ae67d2b13eeec69f763120090cdd67555563bb3f0d4a2d2aa088594699f7200",
-      "fixed_sha256": "2f551392d8badeb82b755395b141a009e57ac4ab96c3da9771e325bfba99ac97",
-      "add_needed": [
-        "libui_shim.so"
-      ],
-      "symbols": [
-        "_ZN7android19GraphicBufferMapper4lockEPK13native_handlejRKNS_4RectEPPvPiS9_"
       ]
     },
     {
@@ -268,6 +224,63 @@
           "reason": "将 ARM mixer_plugin 的 calloc 大小由 32 扩为 36 字节，容纳偏移 32 追加的 4 字节互斥锁；Thumb 地址 0x3236 对应文件偏移 0x2236"
         }
       ]
+    },
+    {
+      "path": "vendor/bin/hw/vendor.qti.media.c2@1.0-service",
+      "sha256": "8af2a61bdc5153c2523e3032b3053425e74ad6e0777ed7bd7a19d95edae422f1",
+      "fixed_sha256": "4ae7c50c0fdf8f074f2458c7348bbe089c1542fb004753d583bea54196e54a39",
+      "add_needed": [],
+      "reference": "https://review.lineageos.org/c/LineageOS/android_device_xiaomi_sm8550-common/+/514034",
+      "offset_replacements": [
+        {
+          "offset": "0x2398",
+          "before_hex": "00218052",
+          "after_hex": "00248052",
+          "reason": "将 utils::ComponentStore 分配大小由 264 (0x108) 扩为 288 (0x120) 字节，匹配源码编译 libcodec2_hidl@1.0 的 RefBase 偏移"
+        }
+      ]
+    },
+    {
+      "path": "vendor/bin/hw/vendor.qti.media.c2audio@1.0-service",
+      "sha256": "080d99bd2882846292d363bad6b4b5b3adb89abbe390916a76feb54c15aafa4f",
+      "fixed_sha256": "c06cdcb4b6e33256c78d6c6b42c7740b3cba72c4c76d00fa2f02040f2d952d91",
+      "add_needed": [],
+      "reference": "https://review.lineageos.org/c/LineageOS/android_device_xiaomi_sm8550-common/+/514034",
+      "offset_replacements": [
+        {
+          "offset": "0x415c",
+          "before_hex": "00218052",
+          "after_hex": "00248052",
+          "reason": "将 utils::ComponentStore 分配大小由 264 (0x108) 扩为 288 (0x120) 字节，匹配源码编译 libcodec2_hidl@1.0 的 RefBase 偏移"
+        }
+      ]
+    },
+    {
+      "path": "vendor/lib/libqcodec2_core.so",
+      "sha256": "c0579c8081b9b3293ef8f5975d7493a87d06e2d1c3af5920c4f84c98b12c6bbb",
+      "fixed_sha256": "7b78ec462a14ae570c64dd2cd7dfe921634c8e2f5a492ff212624dd83a14cc0c",
+      "previous_fixed_sha256": [
+        "68cbec6586aabb255b9ff7b83a99b1071b3ba847f504466dda7e14efd44260ef"
+      ],
+      "add_needed": [
+        "qcodec2_shim.so"
+      ],
+      "symbols": [
+        "_ZN15_C2FenceFactory15CreateSyncFenceEi"
+      ],
+      "reference": "https://review.lineageos.org/c/LineageOS/android_hardware_lineage_compat/+/509027"
+    },
+    {
+      "path": "vendor/lib64/libqcodec2_core.so",
+      "sha256": "d21d09dbf92218870effbf8deee8e6a512aeba7a97e939daec9079db65bbb1fe",
+      "fixed_sha256": "7e965f2a654521df8edc42fd8302e478b6dab18fb6c3dcc82f8c1230431c95bf",
+      "add_needed": [
+        "libcodec2_shim.so"
+      ],
+      "symbols": [
+        "_ZN15_C2FenceFactory15CreateSyncFenceEi"
+      ],
+      "reference": "https://review.lineageos.org/c/LineageOS/android_hardware_lineage_compat/+/509027"
     }
   ]
 }

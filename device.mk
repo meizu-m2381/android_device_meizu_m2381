@@ -308,11 +308,22 @@ $(call soong_config_set_bool,lineage_health,charging_control_supports_bypass,fal
 
 # Media
 PRODUCT_PACKAGES += \
+    libcodec2_hidl@1.0.vendor:32 \
+    libcodec2_hidl@1.0.vendor:64 \
+    libcodec2_hidl_plugin:32 \
+    libcodec2_hidl_plugin:64 \
+    libcodec2_shim:64 \
+    libcodec2_vndk.vendor:32 \
+    libcodec2_vndk.vendor:64 \
     libmedia_codeclist \
+    libqti_c2_store_abi_check \
     libstagefright_codecbase \
     libstagefright_framecapture_utils \
     libstagefright_surface_utils \
     qcodec2_shim
+
+PRODUCT_COPY_FILES += \
+    $(LOCAL_PATH)/configs/media/seccomp_policy/codec2.vendor.ext-arm64.policy:$(TARGET_COPY_OUT_VENDOR)/etc/seccomp_policy/codec2.vendor.ext-arm64.policy
 
 # Network
 PRODUCT_PACKAGES += \
