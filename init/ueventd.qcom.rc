@@ -300,7 +300,7 @@ subsystem mem_buf_vm
 /dev/aud_pasthru_adsp     0660   system     audio
 /dev/msm_audio_ion_cma    0660   system     audio
 /dev/msm_audio_ion        0660   system     audio
-/dev/cirrus_cali          0660   system     audio
+/dev/msm_cirrus_playback  0660   system     audio
 /dev/ttyHSL1              0660   system     system
 /dev/ttyHS1               0660   system     system
 /dev/mdm                  0660   system     radio
@@ -464,6 +464,11 @@ subsystem mem_buf_vm
 /sys/class/dual_role_usb/*	data_role	0660	system	system
 /sys/class/dual_role_usb/*	power_role	0660	system	system
 /sys/class/dual_role_usb/*	mode		0660	system	system
+/sys/class/typec/port0		data_role	0660	system	usb
+/sys/class/typec/port0		power_role	0660	system	usb
+/sys/class/typec/port0		port_type	0660	system	usb
+/sys/class/typec/port0-partner	accessory_mode	0440	system	usb
+/sys/bus/platform/devices/a600000.ssusb	mode	0660	system	usb
 
 # USB Dynamic Disable
 /sys/bus/platform/devices/a600000.ssusb	dynamic_disable	0220	root	usb
@@ -576,5 +581,3 @@ subsystem mem_buf_vm
 # hdmi cec hal
 /dev/cec*                                            0660    system  system
 /sys/devices/platform/soc/984000.i2c/i2c-0/0-002b    get_hpd_stat    0660   system   system
-
-/dev/jiiov_fp              0600   system     system
