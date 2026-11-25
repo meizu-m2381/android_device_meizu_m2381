@@ -7,4 +7,6 @@ $(call inherit-product, vendor/custom/config/common_full_phone.mk)
 # first-parent precedence and otherwise keep full_base's generic device.
 include device/meizu/m2381/m2381-identity.mk
 PRODUCT_PACKAGES += m2381_google_extservices
+# Optional private release layer (maintainer info, custom branding, etc.).
+$(call inherit-product-if-exists, vendor/m2381-release/release.mk)
 PRODUCT_NAME := custom_m2381
