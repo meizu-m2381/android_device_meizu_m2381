@@ -1,7 +1,7 @@
 service vendor.health-default /vendor/bin/hw/android.hardware.health-service.m2381
     class hal
     user system
-    group system
+    group system usb
     capabilities WAKE_ALARM BLOCK_SUSPEND
     file /dev/kmsg w
 
@@ -9,6 +9,6 @@ service vendor.charger /vendor/bin/hw/android.hardware.health-service.m2381 --ch
     class charger
     seclabel u:r:charger_vendor:s0
     user system
-    group system wakelock input graphics
+    group system wakelock input graphics usb
     capabilities SYS_BOOT WAKE_ALARM BLOCK_SUSPEND
     file /dev/kmsg w

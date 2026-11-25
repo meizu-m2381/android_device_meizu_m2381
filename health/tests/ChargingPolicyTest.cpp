@@ -4,6 +4,8 @@
 
 using m2381::ChargeCounterUah;
 using m2381::IsBlockedUsbInput;
+using m2381::PpsDfpSwapInput;
+using m2381::PpsDfpSwapState;
 using m2381::TimeToFullSeconds;
 using m2381::UsbInput;
 
@@ -44,4 +46,65 @@ TEST(M2381Charging, CounterUnitsAndInvalidInputs) {
     EXPECT_EQ(0, ChargeCounterUah(0));
     EXPECT_FALSE(ChargeCounterUah(-1).has_value());
     EXPECT_FALSE(ChargeCounterUah(INT32_MAX).has_value());
+}
+
+TEST(M2381Charging, PpsDfpSwapRequestsOncePerPlugIn) {
+    PpsDfpSwapState state;
+    const PpsDfpSwapInput ready{1, 1, true};
+
+    EXPECT_TRUE(state.ShouldRequestHostRole(ready));
+    state.Update(ready, true);
+
+    EXPECT_FALSE(state.ShouldRequestHostRole(ready));
+    state.Update(ready, false);
+
+    const PpsDfpSwapInput unplugged{0, 0, false};
+    EXPECT_FALSE(state.ShouldRequestHostRole(unplugged));
+    state.Update(unplugged, false);
+
+    EXPECT_TRUE(state.ShouldRequestHostRole(ready));
+}
+
+TEST(M2381Charging, PpsDfpSwapRetriesOnWriteFailure) {
+    PpsDfpSwapState state;
+    const PpsDfpSwapInput ready{1, 1, true};
+
+    EXPECT_TRUE(state.ShouldRequestHostRole(ready));
+    state.Update(ready, false);
+
+    EXPECT_TRUE(state.ShouldRequestHostRole(ready));
+    state.Update(ready, true);
+    EXPECT_FALSE(state.ShouldRequestHostRole(ready));
+}
+
+TEST(M2381Charging, PpsDfpSwapRequiresPpsAndAcOnline) {
+    PpsDfpSwapState state;
+
+    const PpsDfpSwapInput noPps{1, 0, true};
+    EXPECT_FALSE(state.ShouldRequestHostRole(noPps));
+    state.Update(noPps, false);
+
+    const PpsDfpSwapInput noAc{1, 1, false};
+    EXPECT_FALSE(state.ShouldRequestHostRole(noAc));
+    state.Update(noAc, false);
+
+    const PpsDfpSwapInput ready{1, 1, true};
+    EXPECT_TRUE(state.ShouldRequestHostRole(ready));
+    state.Update(ready, true);
+    EXPECT_FALSE(state.ShouldRequestHostRole(ready));
+}
+
+TEST(M2381Charging, PpsDfpSwapMissingInputsPreserveState) {
+    PpsDfpSwapState state;
+    const PpsDfpSwapInput missingSwap{std::nullopt, 1, true};
+    EXPECT_FALSE(state.ShouldRequestHostRole(missingSwap));
+    state.Update(missingSwap, false);
+
+    const PpsDfpSwapInput ready{1, 1, true};
+    EXPECT_TRUE(state.ShouldRequestHostRole(ready));
+    state.Update(ready, true);
+
+    EXPECT_FALSE(state.ShouldRequestHostRole(missingSwap));
+    state.Update(missingSwap, false);
+    EXPECT_FALSE(state.ShouldRequestHostRole(ready));
 }

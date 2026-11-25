@@ -1,0 +1,4 @@
+; Allow charger mode health service to trigger PD-PPS USB data_role swap to host
+(allow charger_vendor_33_0 swap_dfp_allow_sysfs (file (read getattr open)))
+(allow charger_vendor_33_0 data_role_sysfs (file (read write getattr open)))
+(allow charger_vendor_33_0 pps_online_sysfs (file (read getattr open)))

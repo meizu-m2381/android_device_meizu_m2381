@@ -33,4 +33,36 @@ inline int64_t TimeToFullSeconds(int64_t rawSeconds, bool blocked) {
     return blocked || rawSeconds == 65535LL * 60 ? -1 : rawSeconds;
 }
 
+struct PpsDfpSwapInput {
+    std::optional<int64_t> swapDfpAllow;
+    std::optional<int64_t> ppsOnline;
+    bool chargerAcOnline = false;
+};
+
+class PpsDfpSwapState {
+  public:
+    // Mirrors stock health-service.qti: request USB data_role="host" once per
+    // 0 -> non-zero swap_dfp_allow cycle while PD-PPS AC charging is online,
+    // allowing retries if the write fails or PPS status settles later.
+    bool ShouldRequestHostRole(const PpsDfpSwapInput& input) const {
+        return !swappedForCurrentSession_ &&
+               input.swapDfpAllow.value_or(0) != 0 &&
+               input.ppsOnline.value_or(0) != 0 &&
+               input.chargerAcOnline;
+    }
+
+    void Update(const PpsDfpSwapInput& input, bool writeSucceeded) {
+        if (input.swapDfpAllow.has_value() && *input.swapDfpAllow == 0) {
+            swappedForCurrentSession_ = false;
+            return;
+        }
+        if (ShouldRequestHostRole(input) && writeSucceeded) {
+            swappedForCurrentSession_ = true;
+        }
+    }
+
+  private:
+    bool swappedForCurrentSession_ = false;
+};
+
 }  // namespace m2381
