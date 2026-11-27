@@ -26,6 +26,7 @@ import java.io.PrintWriter;
 /** Exposes current framework transforms to the device's ALS compensation client. */
 public final class DisplayAuxService extends SystemService {
     private AodBrightnessController mAodBrightness;
+    private RefreshRateLockController mRefreshRateLock;
     private final AntiFlickerFade mAntiFlickerFade;
     private static final String DESCRIPTOR = "meizu.display.IColorTransform";
     private static final int[] LEVELS = {
@@ -51,6 +52,8 @@ public final class DisplayAuxService extends SystemService {
                 if (!DumpUtils.checkDumpPermission(getContext(), "M2381DisplayAux", writer)) return;
                 if (mAodBrightness == null) writer.println("AOD controller waiting for boot completion");
                 else mAodBrightness.dump(writer);
+                if (mRefreshRateLock == null) writer.println("Refresh rate lock waiting for boot completion");
+                else mRefreshRateLock.dump(writer);
             }
             @Override
             protected boolean onTransact(int code, Parcel data, Parcel reply, int flags)
@@ -146,6 +149,15 @@ public final class DisplayAuxService extends SystemService {
         if (phase == PHASE_BOOT_COMPLETED) {
             mAodBrightness = new AodBrightnessController(getContext());
             mAodBrightness.start();
+            mRefreshRateLock = new RefreshRateLockController(getContext());
+            mRefreshRateLock.start();
+        }
+    }
+
+    @Override
+    public void onUserSwitching(TargetUser from, TargetUser to) {
+        if (mRefreshRateLock != null) {
+            mRefreshRateLock.onUserSwitched();
         }
     }
 }
